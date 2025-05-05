@@ -1,18 +1,16 @@
-from src.logica.models import crear_grupo, listar_grupos
+def imprimir_tareas_agrupadas(tareas_por_grupo):
+    for grupo, tareas in tareas_por_grupo.items():
+        print(f"\nGrupo: {grupo}")
+        for i, (titulo, descripcion) in enumerate(tareas, start=1):
+            print(f"  {i}. {titulo}: {descripcion}")
 
-def menu_principal():
-    while True:
-        print("1. Crear Grupo")
-        print("2. Ver Grupos")
-        print("0. Salir")
-        op = input("Opción: ")
+def mostrar_tareas_para_seleccion(tareas):
+    print("\nTareas disponibles:")
+    for tarea in tareas:
+        print(f"{tarea[0]}. {tarea[1]}")
 
-        if op == "1":
-            nombre = input("Nombre del grupo: ")
-            crear_grupo(nombre)
-        elif op == "2":
-            grupos = listar_grupos()
-            for g in grupos:
-                print(f"{g[0]} - {g[1]}")
-        elif op == "0":
-            break
+def mostrar_grupos_para_seleccion(grupos):
+    print("\nGrupos disponibles:")
+    print("0. Sin grupo")
+    for grupo in grupos:
+        print(f"{grupo[0]}. {grupo[1]}")
