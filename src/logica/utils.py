@@ -29,3 +29,6 @@ def estado_valido(estado):
 # Validar prioridad de la tarea
 def prioridad_valida(prioridad):
     return prioridad in ["baja", "media", "alta"]
+
+def xd():
+    pass
