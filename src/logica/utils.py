@@ -30,5 +30,5 @@ def estado_valido(estado):
 def prioridad_valida(prioridad):
     return prioridad in ["baja", "media", "alta"]
 
-def xd():
+def xad():
     pass
