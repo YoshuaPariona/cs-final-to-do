@@ -6,21 +6,54 @@ def get_connection():
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
-    # Tablas: usuarios, grupos, tipo_tareas, tareas
+
+    # Tabla: usuarios
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS usuarios (
+        idUsuario INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        email TEXT UNIQUE,
+        contraseña TEXT,
+        modoOscuro BOOLEAN
+    )
+    ''')
+
+    # Tabla: grupos
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS grupos (
         idGrupo INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL
+        nombre TEXT
     )
     ''')
+
+    # Tabla: tipo_tareas
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS tipo_tareas (
+        idTipoTarea INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombreTipo TEXT,
+        descripcion TEXT
+    )
+    ''')
+
+    # Tabla: tareas
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS tareas (
         idTarea INTEGER PRIMARY KEY AUTOINCREMENT,
         titulo TEXT,
+        descripcion TEXT,
+        fechaCreacion TIMESTAMP,
+        fechaVencimiento TIMESTAMP,
+        estado TEXT,
+        prioridad TEXT,
+        tipo TEXT,
+        idUsuario INTEGER,
         idGrupo INTEGER,
-        FOREIGN KEY (idGrupo) REFERENCES grupos(idGrupo)
+        idTipoTarea INTEGER,
+        FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+        FOREIGN KEY (idGrupo) REFERENCES grupos(idGrupo),
+        FOREIGN KEY (idTipoTarea) REFERENCES tipo_tareas(idTipoTarea)
     )
     ''')
-    # Agrega más según lo que ya tienes
+
     conn.commit()
     conn.close()

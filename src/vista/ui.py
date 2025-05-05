@@ -1,4 +1,4 @@
-from src.logica.models import crear_grupo, listar_grupos
+from src.logica.tareas import crear_grupo, listar_grupos
 
 def menu_principal():
     while True:
