@@ -1,0 +1,48 @@
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de entorno virtual (ajusta el nombre si es diferente)
+venv/
+env/
+ENV/
+.venv/
+
+# Archivos de logs
+*.log
+
+# Archivos temporales del sistema
+*.tmp
+*.temp
+*.swp
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Configuración de PyCharm
+.idea/
+
+# Archivos de prueba y cobertura
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+htmlcov/
+
+# Archivos de bases de datos SQLite
+*.sqlite3
+*.db
+
+# Archivos de Jupyter (si los usas)
+.ipynb_checkpoints
+
+# Archivos de distribución (si empaquetas el proyecto)
+build/
+dist/
+*.egg-info/
+
+# Archivos de configuración local
+.env
+*.env
