@@ -1,26 +1,9 @@
-import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-def get_connection():
-    return sqlite3.connect("tareas.db")
+DATABASE_URL = "sqlite:///tareas.db"
 
-def init_db():
-    conn = get_connection()
-    cursor = conn.cursor()
-    # Tablas: usuarios, grupos, tipo_tareas, tareas
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS grupos (
-        idGrupo INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL
-    )
-    ''')
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS tareas (
-        idTarea INTEGER PRIMARY KEY AUTOINCREMENT,
-        titulo TEXT,
-        idGrupo INTEGER,
-        FOREIGN KEY (idGrupo) REFERENCES grupos(idGrupo)
-    )
-    ''')
-    # Agrega más según lo que ya tienes
-    conn.commit()
-    conn.close()
+engine = create_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
+
