@@ -1,0 +1,14 @@
+# Interfaz gráfica y web
+pywebview
+fastapi
+uvicorn
+
+# Base de datos y ORM
+sqlalchemy
+alembic
+
+# Testing y calidad de código
+pytest
+pytest-cov
+flake8
+mypy
