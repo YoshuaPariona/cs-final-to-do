@@ -1,18 +1,29 @@
-from src.logica.models import crear_grupo, listar_grupos
+import os
 
-def menu_principal():
-    while True:
-        print("1. Crear Grupo")
-        print("2. Ver Grupos")
-        print("0. Salir")
-        op = input("Opción: ")
+import webview
 
-        if op == "1":
-            nombre = input("Nombre del grupo: ")
-            crear_grupo(nombre)
-        elif op == "2":
-            grupos = listar_grupos()
-            for g in grupos:
-                print(f"{g[0]} - {g[1]}")
-        elif op == "0":
-            break
+"""
+An example of serverless app architecture
+"""
+
+class Api:
+    def addItem(self, title):
+        print('Added item %s' % title)
+
+    def removeItem(self, item):
+        print('Removed item %s' % item)
+
+    def editItem(self, item):
+        print('Edited item %s' % item)
+
+    def toggleItem(self, item):
+        print('Toggled item %s' % item)
+
+    def toggleFullscreen(self):
+        webview.windows[0].toggle_fullscreen()
+
+
+if __name__ == '__main__':
+    api = Api()
+    webview.create_window('TODO APP', 'static/index.html', js_api=api, min_size=(1280, 720))
+    webview.start()
