@@ -11,7 +11,8 @@ class TaskController:
     def __init__(self):
         self.repository = Repository()
         self.current_user: Optional[str] = None
-
+    
+    # Controladores de usuarios
     def register_user(self, username: str, email: str, password: str) -> Tuple[bool, str]:
         """Registrar nuevo usuario"""
         # Crear y validar usuario
@@ -50,6 +51,7 @@ class TaskController:
         """Cerrar sesión"""
         self.current_user = None
 
+    # Controladores de tareas
     def create_task(self, name: str, description: str, start_date: datetime,
                     end_date: datetime, priority: str) -> Tuple[bool, str]:
         """Crear nueva tarea"""
