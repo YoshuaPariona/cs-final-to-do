@@ -9,46 +9,10 @@ from src.modelo.task import Task, TaskStatus
 class Repository:
     """Clase para manejar la persistencia de datos usando SQLite"""
 
-    def __init__(self, db_path: str = "todo_app.db"):
+    def __init__(self, db_path: str = "./todo_app.db"):
         self.db_path = db_path
         self.init_database()
-
-    def init_database(self):
-        """Inicializar la base de datos y crear tablas si no existen"""
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-
-            # Tabla de usuarios
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    username TEXT PRIMARY KEY,
-                    email TEXT UNIQUE NOT NULL,
-                    password TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    remember_me INTEGER DEFAULT 0,
-                    last_login TEXT
-                )
-            """)
-
-            # Tabla de tareas
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS tasks (
-                    task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    description TEXT,
-                    start_date TEXT NOT NULL,
-                    end_date TEXT NOT NULL,
-                    priority TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    completed_at TEXT,
-                    user_id TEXT NOT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users (username)
-                )
-            """)
-
-            conn.commit()
-
+ 
     def save_user(self, user: User) -> bool:
         """Guardar o actualizar usuario en la base de datos"""
         try:

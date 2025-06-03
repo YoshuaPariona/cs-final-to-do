@@ -1,8 +1,8 @@
 import sqlite3
 import os
 
-DB_FILE = "todo_app.db"
-SCHEMA_FILE = "todo.sql"
+DB_FILE = "./todo_app.db"
+SCHEMA_FILE = "./src/controlador/database/todo.sql"
 
 def get_connection():
     return sqlite3.connect(DB_FILE)
