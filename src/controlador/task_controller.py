@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 from src.modelo.user import User
 from src.modelo.task import Task, TaskPriority, TaskStatus
-from src.database.repository import Repository
+from src.controlador.database.repository import Repository
 
 class TaskController:
     """Controlador principal de la aplicación"""

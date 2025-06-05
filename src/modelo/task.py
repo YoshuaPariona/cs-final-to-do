@@ -5,9 +5,9 @@ from typing import Optional
 
 class TaskPriority(Enum):
     """Enumeración para prioridades de tareas"""
-    IMPORTANT = "Important"
+    IMPORTANT = "Importante"
     NORMAL = "Normal"
-    POSTPONABLE = "Postponable"
+    POSTPONABLE = "Postponible"
 
 class TaskStatus(Enum):
     """Enumeración para estados de tareas"""
