@@ -1,16 +1,46 @@
-from src.database.db import get_connection
+from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from ..database.db import Base
+from datetime import datetime
 
-def crear_grupo(nombre):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO grupos (nombre) VALUES (?)", (nombre,))
-    conn.commit()
-    conn.close()
+class Usuario(Base):
+    __tablename__ = 'usuarios'
+    idUsuario = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String)
+    email = Column(String)
+    contraseña = Column(String)
+    modoOscuro = Column(Boolean)
+    tareas = relationship("Tarea", back_populates="usuario")
 
-def listar_grupos():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM grupos")
-    grupos = cursor.fetchall()
-    conn.close()
-    return grupos
+class Grupo(Base):
+    __tablename__ = 'grupos'
+    idGrupo = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String)
+    tareas = relationship("Tarea", back_populates="grupo")
+
+class TipoTarea(Base):
+    __tablename__ = 'tipo_tareas'
+    idTipoTarea = Column(Integer, primary_key=True, autoincrement=True)
+    nombreTipo = Column(String)
+    descripcion = Column(Text)
+    tareas = relationship("Tarea", back_populates="tipo_tarea")
+
+class Tarea(Base):
+    __tablename__ = 'tareas'
+    idTarea = Column(Integer, primary_key=True, autoincrement=True)
+    titulo = Column(String)
+    descripcion = Column(Text)
+    fechaCreacion = Column(DateTime, default=datetime.utcnow)
+    fechaVencimiento = Column(DateTime)
+    estado = Column(String)
+    prioridad = Column(String)
+    tipo = Column(String)
+
+    idUsuario = Column(Integer, ForeignKey('usuarios.idUsuario'))
+    idGrupo = Column(Integer, ForeignKey('grupos.idGrupo'))
+    idTipoTarea = Column(Integer, ForeignKey('tipo_tareas.idTipoTarea'))
+
+    usuario = relationship("Usuario", back_populates="tareas")
+    grupo = relationship("Grupo", back_populates="tareas")
+    tipo_tarea = relationship("TipoTarea", back_populates="tareas")
+

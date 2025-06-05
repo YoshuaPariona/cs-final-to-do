@@ -2,6 +2,8 @@
 pywebview
 fastapi
 uvicorn
+qtpy
+pyqt5
 
 # Base de datos y ORM
 sqlalchemy

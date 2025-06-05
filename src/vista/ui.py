@@ -26,4 +26,4 @@ class Api:
 def load_interface():
     api = Api()
     webview.create_window('TODO APP', './src/vista/static/index.html', js_api=api, min_size=(1280, 720))
-    webview.start()
+    webview.start(debug=True, gui='qt')

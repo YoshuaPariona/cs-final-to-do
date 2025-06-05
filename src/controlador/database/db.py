@@ -1,27 +1,16 @@
-import sqlite3
-import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.exc import SQLAlchemyError
 
-DB_FILE = "./todo_app.db"
-SCHEMA_FILE = "./src/controlador/database/todo.sql"
+DATABASE_URL = "sqlite:///todo_app.db"
 
-def get_connection():
-    return sqlite3.connect(DB_FILE)
+engine = create_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
 
-def init_db():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    # Verifica si alguna tabla ya existe
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tablas = cursor.fetchall()
-
-    if not tablas:  # Si no hay ninguna tabla, crea desde schema.sql
-        with open(SCHEMA_FILE, "r", encoding="utf-8") as f:
-            sql_script = f.read()
-            cursor.executescript(sql_script)
-            print("[DB] Base de datos inicializada desde schema.sql")
-    else:
-        print("[DB] Base de datos ya inicializada")
-
-    conn.commit()
-    conn.close()
+def init_db(my_base):
+    try:
+        my_base.metadata.create_all(bind=engine)
+        print("Base de datos inicializada correctamente.")
+    except SQLAlchemyError as e:
+        print(f"Error al inicializar la base de datos: {e}")
