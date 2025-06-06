@@ -166,3 +166,14 @@ class TaskController:
     def cleanup_completed_tasks(self):
         """Limpiar tareas completadas antiguas"""
         self.repository.cleanup_completed_tasks()
+
+    def get_tasks_by_user(self, username: str, filter_completed: bool = False) -> List[Task]:
+        """Obtener tareas por nombre de usuario (sin necesidad de login actual)"""
+        user = self.repository.get_user(username)
+        if not user:
+            return []
+
+        tasks = self.repository.get_user_tasks(username)
+        if filter_completed:
+            return [t for t in tasks if t.status != TaskStatus.COMPLETED]
+        return tasks
