@@ -1,54 +1,82 @@
 # To-Do App en Python
 
-Una aplicación de lista de tareas desarrollada con Python en PyCharm. Permite a múltiples usuarios registrarse, iniciar sesión y gestionar sus tareas personales. Las tareas pueden agruparse por asunto, ser modificadas, añadidas o eliminadas.
+Una aplicación de gestión de tareas desarrollada con Python y SQLAlchemy. Permite a usuarios registrarse, iniciar sesión y gestionar sus tareas personales con diferentes prioridades y estados.
 
 ## Características
 
-- Registro e inicio de sesión de usuarios
-- Añadir nuevas tareas
-- Modificar tareas existentes
-- Eliminar tareas
-- Modificar tareas existentes
-- Agrupar tareas por categoría
-- Interfaz en consola o GUI
-- Persistencia de datos (usando SQLite)
+- Sistema de usuarios
+  - Registro de usuarios
+  - Inicio y cierre de sesión
+  - Modo oscuro personalizable
+
+- Gestión de tareas
+  - Crear tareas con diferentes prioridades
+  - Marcar tareas como completadas
+  - Actualizar detalles de tareas
+  - Eliminar tareas
+  - Limpieza automática de tareas antiguas
+
+- Prioridades de tareas
+  - Importantes
+  - Normales
+  - Postergables
 
 ## Requisitos
 
-- Python 3.x
-- PyCharm
-- SQLite3 (incluido con Python)
+- Python 3.8+
+- SQLAlchemy
+- SQLite3
 
 ## Instalación
 
 1. Clona este repositorio:
    ```bash
-   git clone https://github.com/YoshuaPariona/cs-parcial-to-do.git
-   cd to-do-python
+   git clone https://github.com/YoshuaPariona/cs-final-to-do.git
+   cd cs-final-to-do
    ```
 
-
-2. Ejecuta la aplicación:
+2. Crea y activa un entorno virtual:
    ```bash
-   python main.py
+   python -m venv .venv
+   .venv\Scripts\activate
+   ```
+
+3. Instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Ejecuta las pruebas:
+   ```bash
+   python -m pytest tests/
    ```
 
 ## Estructura del Proyecto
 
 ```
-proyecto/
+cs-final-to-do/
 ├── src/
-│   ├── logica/           # Lógica de negocio: manejo de tareas, usuarios
-│   ├── vista/            # Vista GUI
-│   └── database/         # Conexión y manejo de SQLite
-├── tests/                # Pruebas
+│   ├── controlador/     # Controladores y lógica de negocio
+│   │   ├── database/    # Capa de acceso a datos
+│   │   └── logica/      # Modelos de base de datos
+│   ├── modelo/          # Modelos de dominio
+│   └── vista/          # Interfaces de usuario
+├── tests/              # Pruebas unitarias
 ├── README.md
 └── requirements.txt
 ```
 
+## Arquitectura
+
+- Patrón MVC (Modelo-Vista-Controlador)
+- SQLAlchemy como ORM
+- Modelos de dominio independientes de la base de datos
+- Pruebas unitarias con pytest
+
 ## Integrantes del equipo
-|N°|Integrante|
-|--|----------|
+
+| N° | Integrante |
+|----|------------|
 | 1 | Javier Curi Dayana Jessica |
 | 2 | Pariona Inga Logan Yoshua Leonardo |
 | 3 | Perez Ravelo Angel Simon |
