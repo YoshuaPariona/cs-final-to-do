@@ -197,9 +197,7 @@ class TestTaskController(unittest.TestCase):
                 description=f"Tarea con prioridad {priority}",
                 start_date=datetime(2026, 12, 29),
                 end_date=datetime(2026, 12, 30),
-                priority=priority,
-                user_id=self.current_user,
-                status=TaskStatus.PENDING
+                priority=priority
             )
         
         tasks = self.controller.get_tasks()  # Using get_tasks instead of get_user_tasks
