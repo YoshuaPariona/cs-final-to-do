@@ -10,42 +10,35 @@ class TaskController:
 
     def __init__(self):
         self.repository = Repository()
-        self.current_user: Optional[str] = None
+        self.current_user = None
     
     # Controladores de usuarios
     def register_user(self, username: str, email: str, password: str) -> Tuple[bool, str]:
         """Registrar nuevo usuario"""
-        # Crear y validar usuario
         user = User(username=username, email=email, password=password)
         is_valid, error_msg = user.validate()
         if not is_valid:
             return False, error_msg
 
-        # Verificar si el usuario ya existe
-        if self.repository.get_user(username):
-            return False, "El nombre de usuario ya está en uso"
+        if self.repository.get_email(email):
+            return False, "El correo ya está en uso"
 
-        # Guardar usuario
-        if self.repository.save_user(user):
+        db_user = User(nombre=username, email=email, contraseña=password, modoOscuro=False)
+
+        if self.repository.save_user(db_user):
             return True, "Usuario registrado exitosamente"
         return False, "Error al registrar usuario"
 
-    def login(self, username: str, password: str, remember: bool = False) -> Tuple[bool, str]:
-        """Autenticar usuario"""
-        user = self.repository.get_user(username)
+    def login(self, username: str, password: str) -> Tuple[bool, str]:
+        user = self.repository.get_email(username)
         if not user:
             return False, "Usuario no encontrado"
 
-        if user.password != password:  # En producción usar hash
+        if user.contraseña != password:
             return False, "Contraseña incorrecta"
 
-        # Actualizar último login y remember me
-        user.last_login = datetime.now()
-        user.remember_me = remember
-        self.repository.save_user(user)
-
-        self.current_user = username
-        return True, "Login exitoso"
+        self.current_user = user.email  # <- esto es clave
+        return True, "Inicio de sesión exitoso"
 
     def logout(self):
         """Cerrar sesión"""
@@ -74,6 +67,7 @@ class TaskController:
 
             if self.repository.save_task(task):
                 return True, "Tarea creada exitosamente"
+            
             return False, "Error al crear la tarea"
 
         except ValueError as e:
@@ -149,11 +143,7 @@ class TaskController:
         """Obtener tareas del usuario actual"""
         if not self.current_user:
             return []
-
-        tasks = self.repository.get_user_tasks(self.current_user)
-        if filter_completed:
-            return [t for t in tasks if t.status != TaskStatus.COMPLETED]
-        return tasks
+        return self.repository.get_user_tasks(self.current_user)
 
     def get_task_by_id(self, task_id: int) -> Optional[Task]:
         """Obtener tarea por ID"""
@@ -177,3 +167,8 @@ class TaskController:
         if filter_completed:
             return [t for t in tasks if t.status != TaskStatus.COMPLETED]
         return tasks
+    
+    def get_user_tasks(self):
+        if self.current_user is None:
+            return []
+        return self.repository.get_user_tasks(self.current_user)

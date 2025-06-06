@@ -28,7 +28,7 @@ class Repository:
             self.db.rollback()
             return False
 
-    def get_user(self, email: str) -> Optional[Usuario]:
+    def get_email(self, email: str) -> Optional[Usuario]:
         try:
             return self.db.query(Usuario).filter_by(email=email).first()
         except SQLAlchemyError as e:
@@ -37,7 +37,7 @@ class Repository:
 
     def delete_user(self, email: str) -> bool:
         try:
-            user = self.get_user(email)
+            user = self.get_email(email)
             if not user:
                 return False
             self.db.delete(user)
@@ -50,35 +50,28 @@ class Repository:
 
     def save_task(self, task: Tarea) -> bool:
         try:
-            user = self.db.query(Usuario).get(task.idUsuario)
-            if not user:
-                print("Usuario no existe.")
-                return False
-
-            if task.idTarea:
-                existing_task = self.db.query(Tarea).filter_by(idTarea=task.idTarea).first()
-                if existing_task:
-                    for attr, value in task.__dict__.items():
-                        if not attr.startswith('_'):
-                            setattr(existing_task, attr, value)
-                else:
-                    return False
-            else:
-                self.db.add(task)
-
+            self.db.add(task)
             self.db.commit()
+            self.db.refresh(task)  # Get the generated ID
             return True
         except SQLAlchemyError as e:
             print(f"Error al guardar tarea: {e}")
             self.db.rollback()
             return False
 
-    def get_user_tasks(self, idUsuario: int) -> List[Tarea]:
+    def get_user_tasks(self, Email: int) -> List[Tarea]:
         try:
-            return self.db.query(Tarea).filter_by(idUsuario=idUsuario).all()
+            return self.db.query(Tarea).filter_by(email = Email).all()
         except SQLAlchemyError as e:
             print(f"Error al obtener tareas: {e}")
             return []
+
+    def get_user_by_username(self, nombre: str) -> Optional[Usuario]:
+        try:
+            return self.db.query(Usuario).filter_by(nombre=nombre).first()
+        except SQLAlchemyError as e:
+            print(f"Error al obtener usuario por nombre: {e}")
+            return None
 
     def delete_task(self, idTarea: int, idUsuario: int) -> bool:
         try:
