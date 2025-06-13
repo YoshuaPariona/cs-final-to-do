@@ -1,23 +1,39 @@
+"""
+Este módulo define las clases y enumeraciones para gestionar tareas en la aplicación.
+Incluye enumeraciones para prioridades y estados de tareas, así como una clase Task
+que representa una tarea con métodos para validación, cálculo de duración y conversión a/desde diccionario.
+"""
+
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 class TaskPriority(Enum):
-    """Enumeración para prioridades de tareas"""
+    """
+    Enumeración para las prioridades de tareas.
+    Define los diferentes niveles de prioridad que una tarea puede tener.
+    """
     IMPORTANT = "Importante"
     NORMAL = "Normal"
     POSTPONABLE = "Postponible"
 
 class TaskStatus(Enum):
-    """Enumeración para estados de tareas"""
+    """
+    Enumeración para los estados de tareas.
+    Define los diferentes estados en los que una tarea puede encontrarse.
+    """
     TODO = "todo"
     COMPLETED = "completed"
     PENDING = "pending"
 
 @dataclass
 class Task:
-    """Modelo de tarea con validación de datos"""
+    """
+    Modelo de tarea con validación de datos.
+    Representa una tarea con atributos como nombre, descripción, fechas, prioridad, estado, etc.
+    """
+
     name: str
     description: str
     start_date: datetime
@@ -30,9 +46,11 @@ class Task:
     task_id: Optional[int] = None
 
     def validate(self) -> tuple[bool, str]:
-        """Validar datos de la tarea
-        Returns:
-            tuple[bool, str]: (es_valido, mensaje_error)
+        """
+        Valida los datos de la tarea.
+
+        Retorna:
+        tuple[bool, str]: Una tupla que indica si la tarea es válida y un mensaje de error en caso contrario.
         """
         if not self.name or len(self.name.strip()) < 1:
             return False, "El nombre de la tarea es requerido"
@@ -52,7 +70,12 @@ class Task:
         return True, ""
 
     def calculate_duration(self) -> str:
-        """Calcular duración de la tarea"""
+        """
+        Calcula la duración de la tarea.
+
+        Retorna:
+        str: Una cadena que describe la duración de la tarea en días, horas y minutos.
+        """
         if not self.start_date or not self.end_date:
             return "No calculado"
 
@@ -72,7 +95,12 @@ class Task:
         return " y ".join(parts) if parts else "Menos de 1 minuto"
 
     def to_dict(self) -> dict:
-        """Convertir tarea a diccionario para almacenamiento"""
+        """
+        Convierte la tarea a un diccionario para almacenamiento.
+
+        Retorna:
+        dict: Un diccionario que representa la tarea.
+        """
         return {
             "task_id": self.task_id,
             "name": self.name,
@@ -88,7 +116,15 @@ class Task:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Task':
-        """Crear tarea desde diccionario"""
+        """
+        Crea una tarea desde un diccionario.
+
+        Parámetros:
+        data (dict): Un diccionario que contiene los datos de la tarea.
+
+        Retorna:
+        Task: Una instancia de Task creada a partir del diccionario.
+        """
         return cls(
             task_id=data.get("task_id"),
             name=data["name"],

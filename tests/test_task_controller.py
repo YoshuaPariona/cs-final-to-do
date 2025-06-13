@@ -1,3 +1,8 @@
+"""
+Este módulo contiene pruebas unitarias para el controlador de tareas en la aplicación TodoApp.
+Utiliza el módulo unittest de Python para definir y ejecutar las pruebas.
+"""
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -11,10 +16,17 @@ from src.modelo.task import TaskPriority, TaskStatus, Task
 from src.controlador.task_controller import TaskController
 from src.controlador.database.db import Base
 
-
 class TestTaskController(unittest.TestCase):
+    """
+    Clase de prueba para el controlador de tareas.
+    Configura una base de datos en memoria para pruebas y define métodos de prueba para diversas funcionalidades.
+    """
 
     def setUp(self):
+        """
+        Configura una base de datos SQLite en memoria para las pruebas.
+        Inicializa el controlador de tareas con la base de datos en memoria.
+        """
         # Configura una base de datos SQLite en memoria
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(self.engine)
@@ -27,6 +39,9 @@ class TestTaskController(unittest.TestCase):
         self.controller.repository.Session = Session
 
     def test_register_user_success(self):
+        """
+        Prueba el registro exitoso de un nuevo usuario.
+        """
         success, message = self.controller.register_user(
             username="newuser",
             email="newuser2@example.com",
@@ -35,9 +50,12 @@ class TestTaskController(unittest.TestCase):
         self.assertFalse(success)
 
     def test_register_user_duplicate(self):
+        """
+        Prueba el registro de un usuario duplicado.
+        """
         # Primer registro (exitoso)
         self.controller.register_user("testuser", "test@example.com", "password123")
-        
+
         # Intento de registro duplicado
         success, message = self.controller.register_user(
             username="testuser",
@@ -47,38 +65,52 @@ class TestTaskController(unittest.TestCase):
         self.assertFalse(success)
 
     def test_login_success(self):
+        """
+        Prueba el inicio de sesión exitoso de un usuario.
+        """
         # Registrar usuario primero
         self.controller.register_user("loginuser", "login@example.com", "password123")
-        
+
         # Intentar login
         success, message = self.controller.login("login@example.com", "password123")
         self.assertFalse(success)
 
     def test_login_wrong_password(self):
-        
+        """
+        Prueba el inicio de sesión con una contraseña incorrecta.
+        """
         # Intentar login con contraseña incorrecta
         success, message = self.controller.login("login@example.com", "wrongpassword")
         self.assertFalse(success)
         self.assertIsNone(self.controller.current_user)
 
     def test_login_nonexistent_user(self):
+        """
+        Prueba el inicio de sesión de un usuario no existente.
+        """
         success, message = self.controller.login("login123@example.com", "password123")
         self.assertFalse(success)
         self.assertIn("no encontrado", message.lower())
         self.assertIsNone(self.controller.current_user)
 
     def test_logout(self):
+        """
+        Prueba el cierre de sesión de un usuario.
+        """
         # Loguear usuario
         self.controller.login("test@example.com", "password123")
-        
+
         # Hacer logout
         self.controller.logout()
         self.assertIsNone(self.controller.current_user)
 
     def test_cleanup_completed_tasks(self):
+        """
+        Prueba la limpieza de tareas completadas.
+        """
         # Registrar y loguear usuario
         self.controller.login("test@example.com", "password123")
-        
+
         # Crear algunas tareas
         self.controller.create_task(
             name="Tarea Completada 1",
@@ -87,7 +119,7 @@ class TestTaskController(unittest.TestCase):
             end_date=datetime.now() - timedelta(days=5),
             priority=TaskPriority.NORMAL.value
         )
-        
+
         self.controller.create_task(
             name="Tarea Pendiente",
             description="Esta tarea está pendiente",
@@ -95,16 +127,19 @@ class TestTaskController(unittest.TestCase):
             end_date=datetime.now() + timedelta(days=5),
             priority=TaskPriority.NORMAL.value
         )
-        
+
         # Completar la primera tarea
         tasks = self.controller.get_user_tasks()
         for task in tasks:
             self.controller.complete_task(tasks[task].id)
-        
+
         # Ejecutar limpieza
         self.controller.cleanup_completed_tasks()
 
     def test_create_task_important(self):
+        """
+        Prueba la creación de una tarea con prioridad importante.
+        """
         success, message = self.controller.create_task(
             name="Tarea importante",
             description="Tarea con prioridad importante",
@@ -115,6 +150,9 @@ class TestTaskController(unittest.TestCase):
         self.assertFalse(success)
 
     def test_create_task_normal(self):
+        """
+        Prueba la creación de una tarea con prioridad normal.
+        """
         success, message = self.controller.create_task(
             name="Tarea normal",
             description="Tarea con prioridad normal",
@@ -123,10 +161,13 @@ class TestTaskController(unittest.TestCase):
             priority=TaskPriority.NORMAL.value
         )
         self.assertFalse(success)
-        
+
         tasks = self.controller.get_user_tasks()
 
     def test_create_task_postponable(self):
+        """
+        Prueba la creación de una tarea con prioridad postponable.
+        """
         # Registrar y loguear usuario
         self.controller.login("test@example.com", "password123")
 
@@ -140,6 +181,9 @@ class TestTaskController(unittest.TestCase):
         self.assertFalse(success)
 
     def test_read_tasks(self):
+        """
+        Prueba la lectura de tareas de un usuario.
+        """
         # First register and login a user
         success, _ = self.controller.login("test@example.com", "password123")
         self.assertFalse(success, "Login failed")
@@ -150,7 +194,7 @@ class TestTaskController(unittest.TestCase):
             TaskPriority.NORMAL.value,
             TaskPriority.POSTPONABLE.value
         ]
-        
+
         for i, priority in enumerate(priorities):
             success, message = self.controller.create_task(
                 name=f"Tarea {i+1}",
@@ -159,10 +203,13 @@ class TestTaskController(unittest.TestCase):
                 end_date=datetime(2026, 12, 30),
                 priority=priority
             )
-        
+
         tasks = self.controller.get_tasks()  # Using get_tasks instead of get_user_tasks
 
     def test_update_task(self):
+        """
+        Prueba la actualización de una tarea existente.
+        """
         # Create a task first
         self.controller.create_task(
             name="Tarea original",
@@ -171,9 +218,9 @@ class TestTaskController(unittest.TestCase):
             end_date=datetime(2026, 12, 30),
             priority=TaskPriority.NORMAL.value
         )
-        
+
         tasks = self.controller.get_user_tasks()
-        
+
         for task in tasks:
             success, message = self.controller.update_task(
                 task_id=task[task].id,
@@ -183,13 +230,16 @@ class TestTaskController(unittest.TestCase):
                 end_date=datetime(2026, 12, 30),
                 priority=TaskPriority.IMPORTANT.value
             )
-        
+
             self.assertTrue(success)
             updated_task = self.controller.get_user_tasks()[task[task].id]
             self.assertEqual(updated_task.name, "Tarea actualizada")
             self.assertEqual(updated_task.priority, TaskPriority.IMPORTANT)
 
     def test_delete_task(self):
+        """
+        Prueba la eliminación de una tarea existente.
+        """
         # Create and then delete a task
         self.controller.create_task(
             name="Tarea para eliminar",
@@ -198,9 +248,9 @@ class TestTaskController(unittest.TestCase):
             end_date=datetime(2026, 12, 30),
             priority=TaskPriority.NORMAL.value
         )
-        
+
         tasks = self.controller.get_user_tasks()
-        
+
         for task in tasks:
             success, message = self.controller.delete_task(tasks[task].id)
             self.assertTrue(success)
