@@ -1,20 +1,37 @@
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-from src.modelo.user import User
-from src.modelo.task import Task, TaskPriority, TaskStatus
-from src.controlador.database.repository import Repository
+from src.models.user import User
+from src.models.task import Task, TaskPriority, TaskStatus
+from src.database.repository import Repository
+
 
 class TaskController:
-    """Controlador principal de la aplicación"""
+    """
+    Controlador principal de la aplicación para gestión de usuarios y tareas.
+    """
 
     def __init__(self):
+        """
+        Inicializa el controlador con un repositorio y sin usuario logueado.
+        """
         self.repository = Repository()
         self.current_user = None
-    
+
     # Controladores de usuarios
+
     def register_user(self, username: str, email: str, password: str) -> Tuple[bool, str]:
-        """Registrar nuevo usuario"""
+        """
+        Registra un nuevo usuario.
+
+        Args:
+            username (str): Nombre de usuario.
+            email (str): Correo electrónico del usuario.
+            password (str): Contraseña del usuario.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         user = User(username=username, email=email, password=password)
         is_valid, error_msg = user.validate()
         if not is_valid:
@@ -30,6 +47,16 @@ class TaskController:
         return False, "Error al registrar usuario"
 
     def login(self, username: str, password: str) -> Tuple[bool, str]:
+        """
+        Inicia sesión para un usuario.
+
+        Args:
+            username (str): Nombre o correo del usuario.
+            password (str): Contraseña del usuario.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         user = self.repository.get_email(username)
         if not user:
             return False, "Usuario no encontrado"
@@ -37,17 +64,38 @@ class TaskController:
         if user.contraseña != password:
             return False, "Contraseña incorrecta"
 
-        self.current_user = user.email  # <- esto es clave
+        self.current_user = user.email  # Guardar usuario logueado por email
         return True, "Inicio de sesión exitoso"
 
     def logout(self):
-        """Cerrar sesión"""
+        """
+        Cierra la sesión del usuario actual.
+        """
         self.current_user = None
 
     # Controladores de tareas
-    def create_task(self, name: str, description: str, start_date: datetime,
-                    end_date: datetime, priority: str) -> Tuple[bool, str]:
-        """Crear nueva tarea"""
+
+    def create_task(
+        self,
+        name: str,
+        description: str,
+        start_date: datetime,
+        end_date: datetime,
+        priority: str,
+    ) -> Tuple[bool, str]:
+        """
+        Crea una nueva tarea para el usuario autenticado.
+
+        Args:
+            name (str): Nombre de la tarea.
+            description (str): Descripción de la tarea.
+            start_date (datetime): Fecha de inicio.
+            end_date (datetime): Fecha de finalización.
+            priority (str): Prioridad de la tarea.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         if not self.current_user:
             return False, "Usuario no autenticado"
 
@@ -58,7 +106,7 @@ class TaskController:
                 start_date=start_date,
                 end_date=end_date,
                 priority=TaskPriority(priority),
-                user_id=self.current_user
+                user_id=self.current_user,
             )
 
             is_valid, error_msg = task.validate()
@@ -67,7 +115,7 @@ class TaskController:
 
             if self.repository.save_task(task):
                 return True, "Tarea creada exitosamente"
-            
+
             return False, "Error al crear la tarea"
 
         except ValueError as e:
@@ -75,21 +123,38 @@ class TaskController:
         except Exception as e:
             return False, f"Error inesperado: {str(e)}"
 
-    def update_task(self, task_id: int, name: str, description: str,
-                    start_date: datetime, end_date: datetime,
-                    priority: str) -> Tuple[bool, str]:
-        """Actualizar tarea existente"""
+    def update_task(
+        self,
+        task_id: int,
+        name: str,
+        description: str,
+        start_date: datetime,
+        end_date: datetime,
+        priority: str,
+    ) -> Tuple[bool, str]:
+        """
+        Actualiza una tarea existente del usuario autenticado.
+
+        Args:
+            task_id (int): ID de la tarea a actualizar.
+            name (str): Nuevo nombre.
+            description (str): Nueva descripción.
+            start_date (datetime): Nueva fecha de inicio.
+            end_date (datetime): Nueva fecha de finalización.
+            priority (str): Nueva prioridad.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         if not self.current_user:
             return False, "Usuario no autenticado"
 
         try:
-            # Obtener tarea existente
             tasks = self.repository.get_user_tasks(self.current_user)
             task = next((t for t in tasks if t.task_id == task_id), None)
             if not task:
                 return False, "Tarea no encontrada"
 
-            # Actualizar campos
             task.name = name
             task.description = description
             task.start_date = start_date
@@ -110,7 +175,15 @@ class TaskController:
             return False, f"Error inesperado: {str(e)}"
 
     def complete_task(self, task_id: int) -> Tuple[bool, str]:
-        """Marcar tarea como completada"""
+        """
+        Marca una tarea como completada.
+
+        Args:
+            task_id (int): ID de la tarea a completar.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         if not self.current_user:
             return False, "Usuario no autenticado"
 
@@ -131,7 +204,15 @@ class TaskController:
             return False, f"Error inesperado: {str(e)}"
 
     def delete_task(self, task_id: int) -> Tuple[bool, str]:
-        """Eliminar tarea"""
+        """
+        Elimina una tarea del usuario autenticado.
+
+        Args:
+            task_id (int): ID de la tarea a eliminar.
+
+        Returns:
+            Tuple[bool, str]: Éxito y mensaje de resultado.
+        """
         if not self.current_user:
             return False, "Usuario no autenticado"
 
@@ -140,13 +221,30 @@ class TaskController:
         return False, "Error al eliminar la tarea"
 
     def get_tasks(self, filter_completed: bool = False) -> List[Task]:
-        """Obtener tareas del usuario actual"""
+        """
+        Obtiene todas las tareas del usuario actual.
+
+        Args:
+            filter_completed (bool, optional): Si True, filtra tareas completadas.
+                                               Actualmente no usado. Defaults to False.
+
+        Returns:
+            List[Task]: Lista de tareas.
+        """
         if not self.current_user:
             return []
         return self.repository.get_user_tasks(self.current_user)
 
     def get_task_by_id(self, task_id: int) -> Optional[Task]:
-        """Obtener tarea por ID"""
+        """
+        Obtiene una tarea por su ID para el usuario autenticado.
+
+        Args:
+            task_id (int): ID de la tarea.
+
+        Returns:
+            Optional[Task]: Tarea encontrada o None.
+        """
         if not self.current_user:
             return None
 
@@ -154,11 +252,23 @@ class TaskController:
         return next((t for t in tasks if t.task_id == task_id), None)
 
     def cleanup_completed_tasks(self):
-        """Limpiar tareas completadas antiguas"""
+        """Elimina tareas completadas hace más de X días."""
         self.repository.cleanup_completed_tasks()
 
-    def get_tasks_by_user(self, username: str, filter_completed: bool = False) -> List[Task]:
-        """Obtener tareas por nombre de usuario (sin necesidad de login actual)"""
+    def get_tasks_by_user(
+        self, username: str, filter_completed: bool = False
+    ) -> List[Task]:
+        """
+        Obtiene tareas de un usuario dado sin necesidad de login.
+
+        Args:
+            username (str): Nombre de usuario.
+            filter_completed (bool, optional): Si True, filtra tareas completadas.
+                                               Defaults to False.
+
+        Returns:
+            List[Task]: Lista de tareas.
+        """
         user = self.repository.get_user_tasks(username)
         if not user:
             return []
@@ -167,8 +277,14 @@ class TaskController:
         if filter_completed:
             return [t for t in tasks if t.status != TaskStatus.COMPLETED]
         return tasks
-    
-    def get_user_tasks(self):
+
+    def get_user_tasks(self) -> List[Task]:
+        """
+        Obtiene tareas del usuario autenticado.
+
+        Returns:
+            List[Task]: Lista de tareas o vacía si no autenticado.
+        """
         if self.current_user is None:
             return []
         return self.repository.get_user_tasks(self.current_user)

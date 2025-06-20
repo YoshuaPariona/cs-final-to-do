@@ -1,7 +1,16 @@
+"""
+Módulo de interfaz de consola para la aplicación TodoApp.
+
+Permite a los usuarios:
+- Crear una cuenta
+- Iniciar sesión
+- Gestionar tareas (crear, modificar, eliminar, listar)
+"""
+
 from getpass import getpass
 from datetime import datetime
-from ..controlador.database.repository import Repository
-from ..controlador.logica.models import Usuario, Tarea
+from src.database.repository import Repository
+from src.models.models import Usuario, Tarea
 
 # Instancia del repositorio
 repo = Repository()
@@ -10,7 +19,10 @@ repo = Repository()
 usuario_actual = None
 
 
-def ui_minimal():
+def ui_console():
+    """
+    Muestra el menú principal de la consola.
+    """
     while True:
         print("\n=== Bienvenido a TodoApp ===")
         print("1. Iniciar sesión")
@@ -29,7 +41,11 @@ def ui_minimal():
         else:
             print("Opción no válida.")
 
+
 def login():
+    """
+    Solicita credenciales al usuario e inicia sesión si son válidas.
+    """
     global usuario_actual
     print("\n--- Iniciar sesión ---")
     email = input("Email: ")
@@ -43,7 +59,11 @@ def login():
     else:
         print("❌ Credenciales incorrectas.")
 
+
 def crear_cuenta():
+    """
+    Solicita datos al usuario y crea una nueva cuenta si no existe previamente.
+    """
     print("\n--- Crear nueva cuenta ---")
     nombre = input("Nombre: ")
     email = input("Email: ")
@@ -70,7 +90,11 @@ def crear_cuenta():
     else:
         print("❌ Error al crear cuenta.")
 
+
 def menu_tareas():
+    """
+    Muestra el menú de gestión de tareas del usuario autenticado.
+    """
     while True:
         print(f"\n--- Tareas de {usuario_actual.email} ---")
         print("1. Ver todas las tareas")
@@ -98,7 +122,11 @@ def menu_tareas():
         else:
             print("Opción no válida.")
 
+
 def ver_tareas():
+    """
+    Muestra la lista de tareas del usuario.
+    """
     tareas = repo.get_user_tasks(usuario_actual.idUsuario)
     if not tareas:
         print("No tienes tareas registradas.")
@@ -109,7 +137,11 @@ def ver_tareas():
         fecha_v = tarea.fechaVencimiento.strftime("%d-%m-%Y") if tarea.fechaVencimiento else "N/A"
         print(f"[{tarea.idTarea}] {tarea.titulo} | Estado: {tarea.estado} | Vence: {fecha_v}")
 
+
 def crear_tarea():
+    """
+    Permite al usuario crear una nueva tarea con validación de fecha.
+    """
     print("\n--- Crear nueva tarea ---")
     titulo = input("Título: ")
     descripcion = input("Descripción: ")
@@ -143,7 +175,11 @@ def crear_tarea():
     else:
         print("❌ Error al guardar la tarea.")
 
+
 def modificar_tarea():
+    """
+    Permite modificar los datos de una tarea existente.
+    """
     tarea_id = input("ID de la tarea a modificar: ")
     tarea = buscar_tarea_por_id(tarea_id)
     if not tarea:
@@ -174,14 +210,22 @@ def modificar_tarea():
     else:
         print("❌ No se pudo actualizar la tarea.")
 
+
 def eliminar_tarea():
+    """
+    Elimina una tarea específica del usuario.
+    """
     tarea_id = input("ID de la tarea a eliminar: ")
     if repo.delete_task(int(tarea_id), usuario_actual.idUsuario):
         print("✅ Tarea eliminada.")
     else:
         print("❌ No se pudo eliminar la tarea.")
 
+
 def eliminar_todas_tareas():
+    """
+    Elimina todas las tareas del usuario, previa confirmación.
+    """
     confirmacion = input("¿Seguro que deseas eliminar TODAS tus tareas? (s/n): ")
     if confirmacion.lower() == "s":
         tareas = repo.get_user_tasks(usuario_actual.idUsuario)
@@ -191,7 +235,17 @@ def eliminar_todas_tareas():
     else:
         print("❌ Cancelado.")
 
+
 def buscar_tarea_por_id(tarea_id):
+    """
+    Busca una tarea específica por su ID.
+
+    Args:
+        tarea_id (str): ID de la tarea.
+
+    Returns:
+        Tarea o None si no se encuentra.
+    """
     try:
         tarea_id = int(tarea_id)
         tareas = repo.get_user_tasks(usuario_actual.idUsuario)

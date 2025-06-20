@@ -3,21 +3,52 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
+
 class TaskPriority(Enum):
-    """Enumeración para prioridades de tareas"""
+    """
+    Enumeración que representa las prioridades posibles para una tarea.
+
+    Atributos:
+        IMPORTANT: Tarea de alta prioridad.
+        NORMAL: Tarea de prioridad media.
+        POSTPONABLE: Tarea que puede posponerse.
+    """
     IMPORTANT = "Importante"
     NORMAL = "Normal"
     POSTPONABLE = "Postponible"
 
+
 class TaskStatus(Enum):
-    """Enumeración para estados de tareas"""
+    """
+    Enumeración que representa los estados posibles de una tarea.
+
+    Atributos:
+        TODO: Tarea pendiente por realizar.
+        COMPLETED: Tarea completada.
+        PENDING: Tarea en espera.
+    """
     TODO = "todo"
     COMPLETED = "completed"
     PENDING = "pending"
 
+
 @dataclass
 class Task:
-    """Modelo de tarea con validación de datos"""
+    """
+    Modelo de datos para representar una tarea en el sistema.
+
+    Atributos:
+        name (str): Nombre de la tarea.
+        description (str): Descripción detallada de la tarea.
+        start_date (datetime): Fecha y hora de inicio.
+        end_date (datetime): Fecha y hora de finalización.
+        priority (TaskPriority): Prioridad asignada.
+        status (TaskStatus): Estado actual de la tarea.
+        created_at (datetime): Fecha de creación de la tarea.
+        completed_at (Optional[datetime]): Fecha en la que se completó la tarea.
+        user_id (str): Identificador del usuario que creó la tarea.
+        task_id (Optional[int]): Identificador único de la tarea.
+    """
     name: str
     description: str
     start_date: datetime
@@ -30,9 +61,12 @@ class Task:
     task_id: Optional[int] = None
 
     def validate(self) -> tuple[bool, str]:
-        """Validar datos de la tarea
+        """
+        Valida que los atributos de la tarea sean correctos.
+
         Returns:
-            tuple[bool, str]: (es_valido, mensaje_error)
+            tuple[bool, str]: Una tupla con un booleano que indica si la tarea es válida,
+                              y un mensaje de error en caso contrario.
         """
         if not self.name or len(self.name.strip()) < 1:
             return False, "El nombre de la tarea es requerido"
@@ -52,7 +86,12 @@ class Task:
         return True, ""
 
     def calculate_duration(self) -> str:
-        """Calcular duración de la tarea"""
+        """
+        Calcula la duración de la tarea en días, horas y minutos.
+
+        Returns:
+            str: Cadena descriptiva con la duración.
+        """
         if not self.start_date or not self.end_date:
             return "No calculado"
 
@@ -72,7 +111,12 @@ class Task:
         return " y ".join(parts) if parts else "Menos de 1 minuto"
 
     def to_dict(self) -> dict:
-        """Convertir tarea a diccionario para almacenamiento"""
+        """
+        Convierte la tarea a un diccionario serializable.
+
+        Returns:
+            dict: Representación en diccionario de la tarea.
+        """
         return {
             "task_id": self.task_id,
             "name": self.name,
@@ -82,13 +126,23 @@ class Task:
             "priority": self.priority.value,
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "user_id": self.user_id
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Task':
-        """Crear tarea desde diccionario"""
+        """
+        Crea una instancia de Task a partir de un diccionario.
+
+        Args:
+            data (dict): Diccionario con los datos de la tarea.
+
+        Returns:
+            Task: Instancia creada de la clase Task.
+        """
         return cls(
             task_id=data.get("task_id"),
             name=data["name"],
@@ -98,6 +152,8 @@ class Task:
             priority=TaskPriority(data["priority"]),
             status=TaskStatus(data["status"]),
             created_at=datetime.fromisoformat(data["created_at"]),
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            completed_at=datetime.fromisoformat(
+                data["completed_at"]
+            ) if data.get("completed_at") else None,
             user_id=data["user_id"]
         )

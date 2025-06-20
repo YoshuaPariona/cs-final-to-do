@@ -1,9 +1,9 @@
-from src.controlador.database.db import init_db
-from src.controlador.logica.models import Base # Inicializar base de datos
-from src.vista.ui_minimal import ui_minimal
-# from src.vista.ui import menu_principal
+from src.database.db import init_db
+from src.models.models import Base # Inicializar base de datos
+# from view.console_ui import ui_console
+from src.views.ui import load_interface
 
 if __name__ == "__main__":
     init_db(Base)
-    ui_minimal()
-    # menu_principal()
+    # ui_console()
+    load_interface()

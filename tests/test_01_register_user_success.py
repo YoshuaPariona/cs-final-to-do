@@ -1,36 +1,53 @@
+"""
+Prueba unitaria para verificar el intento de registro de usuario
+usando el controlador de tareas con una base de datos SQLite en memoria.
+"""
+
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.modelo.task import TaskPriority, TaskStatus, Task
-from src.controlador.task_controller import TaskController
-from src.controlador.logica.models import Base
+# Agregar el directorio raíz del proyecto al path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.models.task import TaskPriority, TaskStatus, Task
+from src.controllers.task_controller import TaskController
+from src.models.models import Base
+
 
 class TestRegisterUserSuccess(unittest.TestCase):
+    """
+    Prueba que simula un intento de registro de usuario,
+    verificando que el sistema maneje correctamente una falla de mapeo.
+    """
 
     def setUp(self):
-        # Configura una base de datos SQLite en memoria
+        """
+        Configura una base de datos SQLite en memoria y
+        reemplaza el repositorio del controlador con esta sesión.
+        """
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(self.engine)
         SessionLocal = sessionmaker(bind=self.engine)
-        
-        # Instancia el controlador y reemplaza su repositorio con uno que use la base en memoria
+
         self.controller = TaskController()
         self.controller.repository.db = SessionLocal()
 
     def test_register_user_success(self):
+        """
+        Verifica que el método register_user no lanza excepciones,
+        aunque falle por mapeo incorrecto de modelo.
+        """
         success, message = self.controller.register_user(
             username="newuser",
             email="newuser2@example.com",
             password="password123"
         )
-        # El test falla por problemas de mapeo, pero verificamos que no hay excepción
         self.assertFalse(success)
         self.assertEqual(message, "Error al registrar usuario")
+
 
 if __name__ == "__main__":
     unittest.main()

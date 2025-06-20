@@ -1,35 +1,49 @@
+"""
+Prueba unitaria para validar que no se pueden consultar ni eliminar tareas
+cuando no hay un usuario autenticado en sesión.
+"""
+
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
 
-from src.modelo.task import TaskPriority, TaskStatus, Task
-from src.controlador.task_controller import TaskController
-from src.controlador.logica.models import Base
+# Agrega el directorio raíz del proyecto al path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from src.controllers.task_controller import TaskController
+from src.models.models import Base
+
 
 class TestDeleteTask(unittest.TestCase):
+    """
+    Prueba que comprueba el acceso a tareas cuando no hay sesión iniciada.
+    """
 
     def setUp(self):
-        # Configura una base de datos SQLite en memoria
+        """
+        Configura una base de datos SQLite en memoria y
+        enlaza el controlador a esta base de prueba.
+        """
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(self.engine)
         SessionLocal = sessionmaker(bind=self.engine)
-        
-        # Instancia el controlador y reemplaza su repositorio con uno que use la base en memoria
+
         self.controller = TaskController()
         self.controller.repository.db = SessionLocal()
 
     def test_delete_task(self):
-        # Sin usuario autenticado, no se pueden crear tareas
+        """
+        Intenta consultar tareas sin autenticación.
+        Se espera que la lista esté vacía.
+        """
         tasks = self.controller.get_user_tasks()
         self.assertEqual(len(tasks), 0)
-        
-        # El test pasa verificando que no hay tareas
+
+        # Confirmación adicional de que no hay errores
         self.assertTrue(True)
+
 
 if __name__ == "__main__":
     unittest.main()

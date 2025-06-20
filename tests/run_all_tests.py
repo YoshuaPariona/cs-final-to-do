@@ -1,10 +1,18 @@
+"""
+Archivo principal para ejecutar la suite de tests unitarios de TodoApp.
+
+Carga y ejecuta todas las pruebas definidas en los módulos individuales,
+mostrando un resumen al finalizar.
+"""
+
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import unittest
 
-# Importar todos los tests
+# Agrega el directorio raíz del proyecto al sys.path para importar módulos correctamente
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Importar todas las clases de test individuales
 from test_01_register_user_success import TestRegisterUserSuccess
 from test_02_register_user_duplicate import TestRegisterUserDuplicate
 from test_03_login_success import TestLoginSuccess
@@ -19,12 +27,13 @@ from test_11_read_tasks import TestReadTasks
 from test_12_update_task import TestUpdateTask
 from test_13_delete_task import TestDeleteTask
 
+
 if __name__ == "__main__":
-    # Crear suite de tests
+    # Crear el cargador y la suite de pruebas
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
-    
-    # Agregar todos los tests
+
+    # Lista de clases de test a ejecutar
     test_classes = [
         TestRegisterUserSuccess,
         TestRegisterUserDuplicate,
@@ -40,18 +49,19 @@ if __name__ == "__main__":
         TestUpdateTask,
         TestDeleteTask
     ]
-    
+
+    # Cargar y agregar los tests de cada clase a la suite
     for test_class in test_classes:
         tests = loader.loadTestsFromTestCase(test_class)
         suite.addTests(tests)
-    
-    # Ejecutar tests
+
+    # Ejecutar la suite de tests
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
-    
-    # Mostrar resumen
-    print(f"\n{'='*50}")
-    print(f"Tests ejecutados: {result.testsRun}")
-    print(f"Errores: {len(result.errors)}")
-    print(f"Fallos: {len(result.failures)}")
-    print(f"Éxito: {result.wasSuccessful()}")
+
+    # Mostrar resumen de resultados
+    print(f"\n{'=' * 50}")
+    print(f"Tests ejecutados : {result.testsRun}")
+    print(f"Errores          : {len(result.errors)}")
+    print(f"Fallos           : {len(result.failures)}")
+    print(f"Éxito total      : {result.wasSuccessful()}")
