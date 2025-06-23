@@ -3,8 +3,8 @@ const AppState = {
     currentUser: null,
     currentPage: 'dashboard',
     users: [
-        { email: 'admin@gmail.com', password: 'admin', name: 'Admin User', role: 'admin' },
-        { email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'user' }
+        // { email: 'admin@gmail.com', password: 'admin', name: 'Admin User', role: 'admin' },
+        // { email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'user' }
     ],
     tasks: [],
     events: [],
@@ -83,17 +83,20 @@ const UserAuth = {
         this.showLoadingState();
         
         // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // await new Promise(resolve => setTimeout(resolve, 1000));
         
+        const response = await window.pywebview.api.get_item("get_user", {email, password})
+        const data = response.data;
+
         // Check credentials against user database
-        const user = AppState.users.find(u => u.email === email && u.password === password);
+        // const user = AppState.users.find(u => u.email === email && u.password === password);
         
-        if (user) {
+        if (response.success) {
             // Successful login
             AppState.currentUser = {
-                email: user.email,
-                name: user.name,
-                role: user.role,
+                email: data.email,
+                name: data.name,
+                role: data.role || "user",
                 loginTime: new Date().toISOString()
             };
             
@@ -102,7 +105,7 @@ const UserAuth = {
             
             // Load user-specific data
             this.loadUserData();
-            
+        
             // Show application
             this.showApp();
         } else {
@@ -131,18 +134,20 @@ const UserAuth = {
         if (!valid) return;
 
         // Check if user already exists
-        if (AppState.users.some(u => u.email === email)) {
-            this.showFieldError('signupEmail', document.getElementById('signupEmailError'), 'Email already registered');
+        const response = await window.pywebview.api.add_item("create_user", {name, email, password})
+
+        if (!response.success) {
+            this.showFieldError('signupEmail', document.getElementById('signupPasswordError'), response.message);
             return;
         }
 
         // Add new user
-        AppState.users.push({
-            email,
-            password,
-            name,
-            role: 'user'
-        });
+        // AppState.users.push({
+        //     email,
+        //     password,
+        //     name,
+        //     role: 'user'
+        // });
 
         alert('Account created successfully! You can now log in.');
         showLogin();
@@ -291,19 +296,19 @@ const UserAuth = {
 
     // Load user-specific data
     loadUserData() {
-        const userKey = `userData_${AppState.currentUser.email}`;
-        const savedData = localStorage.getItem(userKey);
+        // const userKey = `userData_${AppState.currentUser.email}`;
+        // const savedData = localStorage.getItem(userKey);
         
-        if (savedData) {
-            try {
-                const userData = JSON.parse(savedData);
-                AppState.tasks = userData.tasks || [];
-                AppState.events = userData.events || [];
-                AppState.settings = userData.settings || {};
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        }
+        // if (savedData) {
+        //     try {
+        //         const userData = JSON.parse(savedData);
+        //         AppState.tasks = userData.tasks || [];
+        //         AppState.events = userData.events || [];
+        //         AppState.settings = userData.settings || {};
+        //     } catch (error) {
+        //         console.error('Error loading user data:', error);
+        //     }
+        // }
         
         // Initialize with default data if empty
         if (AppState.tasks.length === 0) {

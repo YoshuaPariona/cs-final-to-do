@@ -55,8 +55,25 @@ class Repository:
         try:
             return self.db.query(Usuario).filter_by(email=email).first()
         except SQLAlchemyError as e:
+            print(f"Error al obtener email: {e}")
+            return None
+
+    def get_user(self, email: str, password: str) -> Optional[Usuario]:
+        """
+        Obtiene un usuario por su email.
+
+        Args:
+            email (str): Email del usuario.
+
+        Returns:
+            Optional[Usuario]: Usuario encontrado o None si no existe.
+        """
+        try:
+            return self.db.query(Usuario).filter_by(email=email, contraseña=password).first()
+        except SQLAlchemyError as e:
             print(f"Error al obtener usuario: {e}")
             return None
+
 
     def delete_user(self, email: str) -> bool:
         """

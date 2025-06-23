@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Tuple
 
+from src.models.models import *
 from src.models.user import User
 from src.models.task import Task, TaskPriority, TaskStatus
 from src.database.repository import Repository
@@ -12,7 +13,7 @@ class TaskController:
     """
 
     def __init__(self):
-        """
+        """s
         Inicializa el controlador con un repositorio y sin usuario logueado.
         """
         self.repository = Repository()
@@ -32,7 +33,7 @@ class TaskController:
         Returns:
             Tuple[bool, str]: Éxito y mensaje de resultado.
         """
-        user = User(username=username, email=email, password=password)
+        user = User(username=username, email=email, password=password)  # Modelo de logica de negocio
         is_valid, error_msg = user.validate()
         if not is_valid:
             return False, error_msg
@@ -40,7 +41,7 @@ class TaskController:
         if self.repository.get_email(email):
             return False, "El correo ya está en uso"
 
-        db_user = User(nombre=username, email=email, contraseña=password, modoOscuro=False)
+        db_user = Usuario(nombre=username, email=email, contraseña=password, modoOscuro=False) # Modelo alchemy
 
         if self.repository.save_user(db_user):
             return True, "Usuario registrado exitosamente"
@@ -57,7 +58,7 @@ class TaskController:
         Returns:
             Tuple[bool, str]: Éxito y mensaje de resultado.
         """
-        user = self.repository.get_email(username)
+        user = self.repository.get_user(username, password)
         if not user:
             return False, "Usuario no encontrado"
 
@@ -65,7 +66,7 @@ class TaskController:
             return False, "Contraseña incorrecta"
 
         self.current_user = user.email  # Guardar usuario logueado por email
-        return True, "Inicio de sesión exitoso"
+        return True, "Inicio de sesión exitoso", {"email": user.email, "name": user.nombre}
 
     def logout(self):
         """
