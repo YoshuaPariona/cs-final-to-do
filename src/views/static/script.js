@@ -37,6 +37,7 @@ const UserAuth = {
 
     // Setup authentication event listeners
     setupEventListeners() {
+        // Login form events
         const loginForm = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
@@ -46,6 +47,21 @@ const UserAuth = {
         passwordInput.addEventListener('blur', this.validatePassword.bind(this));
         emailInput.addEventListener('input', this.clearEmailError.bind(this));
         passwordInput.addEventListener('input', this.clearPasswordError.bind(this));
+
+        // Signup form events
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', this.handleSignup.bind(this));
+            document.getElementById('signupName').addEventListener('input', this.clearSignupNameError.bind(this));
+            document.getElementById('signupEmail').addEventListener('input', this.clearSignupEmailError.bind(this));
+            document.getElementById('signupPassword').addEventListener('input', this.clearSignupPasswordError.bind(this));
+        }
+
+        // Switch between login and signup
+        const switchToSignup = document.querySelectorAll('.btn-link[onclick="showSignup()"]');
+        switchToSignup.forEach(btn => btn.addEventListener('click', showSignup));
+        const switchToLogin = document.querySelectorAll('.btn-link[onclick="showLogin()"]');
+        switchToLogin.forEach(btn => btn.addEventListener('click', showLogin));
     },
 
     // Handle login form submission
@@ -97,6 +113,41 @@ const UserAuth = {
         this.hideLoadingState();
     },
 
+    // Handle signup form submission
+    async handleSignup(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value.trim();
+
+        let valid = true;
+        if (!name) {
+            this.showFieldError('signupName', document.getElementById('signupNameError'), 'Name is required');
+            valid = false;
+        }
+        if (!this.validateSignupEmail()) valid = false;
+        if (!this.validateSignupPassword()) valid = false;
+        if (!valid) return;
+
+        // Check if user already exists
+        if (AppState.users.some(u => u.email === email)) {
+            this.showFieldError('signupEmail', document.getElementById('signupEmailError'), 'Email already registered');
+            return;
+        }
+
+        // Add new user
+        AppState.users.push({
+            email,
+            password,
+            name,
+            role: 'user'
+        });
+
+        alert('Account created successfully! You can now log in.');
+        showLogin();
+    },
+
     // Email validation
     validateEmail() {
         const email = document.getElementById('email').value.trim();
@@ -129,6 +180,39 @@ const UserAuth = {
         }
     },
 
+    // Signup email validation
+    validateSignupEmail() {
+        const email = document.getElementById('signupEmail').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const errorElement = document.getElementById('signupEmailError');
+        if (!email) {
+            this.showFieldError('signupEmail', errorElement, 'Email is required');
+            return false;
+        } else if (!emailRegex.test(email)) {
+            this.showFieldError('signupEmail', errorElement, 'Please enter a valid email address');
+            return false;
+        } else {
+            this.hideFieldError('signupEmail', errorElement);
+            return true;
+        }
+    },
+
+    // Signup password validation
+    validateSignupPassword() {
+        const password = document.getElementById('signupPassword').value.trim();
+        const errorElement = document.getElementById('signupPasswordError');
+        if (!password) {
+            this.showFieldError('signupPassword', errorElement, 'Password is required');
+            return false;
+        } else if (password.length < 6) {
+            this.showFieldError('signupPassword', errorElement, 'Password must be at least 6 characters');
+            return false;
+        } else {
+            this.hideFieldError('signupPassword', errorElement);
+            return true;
+        }
+    },
+
     // Clear email error
     clearEmailError() {
         const errorElement = document.getElementById('emailError');
@@ -139,6 +223,17 @@ const UserAuth = {
     clearPasswordError() {
         const errorElement = document.getElementById('passwordError');
         this.hideFieldError('password', errorElement);
+    },
+
+    // Clear signup errors
+    clearSignupNameError() {
+        this.hideFieldError('signupName', document.getElementById('signupNameError'));
+    },
+    clearSignupEmailError() {
+        this.hideFieldError('signupEmail', document.getElementById('signupEmailError'));
+    },
+    clearSignupPasswordError() {
+        this.hideFieldError('signupPassword', document.getElementById('signupPasswordError'));
     },
 
     // Show field error
@@ -170,7 +265,19 @@ const UserAuth = {
         buttonText.style.display = 'none';
         spinner.style.display = 'block';
     },
+    showSignup() {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('signupPage').style.display = 'flex';
+        document.getElementById('signupForm').reset();
+        // Limpia errores si tienes funciones para ello
+    },
 
+    showLogin() {
+        document.getElementById('signupPage').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('loginForm').reset();
+        // Limpia errores si tienes funciones para ello
+    },
     // Hide loading state
     hideLoadingState() {
         const button = document.getElementById('loginButton');
@@ -1183,3 +1290,21 @@ window.TodoApp = {
     Utils,
     AppState
 };
+
+// ====== UI SWITCH FUNCTIONS ======
+function showSignup() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('signupPage').style.display = 'flex';
+    // Optionally reset the form and errors
+    document.getElementById('signupForm').reset();
+    UserAuth.clearSignupNameError();
+    UserAuth.clearSignupEmailError();
+    UserAuth.clearSignupPasswordError();
+}
+function showLogin() {
+    document.getElementById('signupPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('loginForm').reset();
+    UserAuth.clearEmailError();
+    UserAuth.clearPasswordError();
+}
