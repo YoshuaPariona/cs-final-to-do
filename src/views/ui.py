@@ -26,8 +26,12 @@ class Api:
         if action == 'get_user' :
             email = data.get("email")
             password = data.get("password")
-            success, message, data = self.controller.login(email, password)
-            return {"success": success, "message": message, "data": data}
+            success, message, *data = self.controller.login(email, password)
+
+            if len(data) == 0:
+                return {"success": success, "message": message}
+            else:
+                return {"success": success, "message": message, "data": data[0]}
 
 
     def add_item(self, action: str, data: dict) -> dict:

@@ -2,10 +2,7 @@
 const AppState = {
     currentUser: null,
     currentPage: 'dashboard',
-    users: [
-        // { email: 'admin@gmail.com', password: 'admin', name: 'Admin User', role: 'admin' },
-        // { email: 'user@example.com', password: 'user123', name: 'Regular User', role: 'user' }
-    ],
+    users: [],
     tasks: [],
     events: [],
     settings: {}
@@ -141,15 +138,6 @@ const UserAuth = {
             return;
         }
 
-        // Add new user
-        // AppState.users.push({
-        //     email,
-        //     password,
-        //     name,
-        //     role: 'user'
-        // });
-
-        alert('Account created successfully! You can now log in.');
         showLogin();
     },
 
@@ -296,19 +284,19 @@ const UserAuth = {
 
     // Load user-specific data
     loadUserData() {
-        // const userKey = `userData_${AppState.currentUser.email}`;
-        // const savedData = localStorage.getItem(userKey);
+        const userKey = `userData_${AppState.currentUser.email}`;
+        const savedData = localStorage.getItem(userKey);
         
-        // if (savedData) {
-        //     try {
-        //         const userData = JSON.parse(savedData);
-        //         AppState.tasks = userData.tasks || [];
-        //         AppState.events = userData.events || [];
-        //         AppState.settings = userData.settings || {};
-        //     } catch (error) {
-        //         console.error('Error loading user data:', error);
-        //     }
-        // }
+        if (savedData) {
+            try {
+                const userData = JSON.parse(savedData);
+                AppState.tasks = userData.tasks || [];
+                AppState.events = userData.events || [];
+                AppState.settings = userData.settings || {};
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
         
         // Initialize with default data if empty
         if (AppState.tasks.length === 0) {
@@ -331,72 +319,6 @@ const UserAuth = {
                 status: 'new',
                 createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
             },
-            {
-                id: 2,
-                title: 'Update API Documentation',
-                description: 'Update API documentation with new endpoints and examples for the latest version.',
-                priority: 'normal',
-                status: 'new',
-                createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // 1 day ago
-            },
-            {
-                id: 3,
-                title: 'Organize Team Building Event',
-                description: 'Plan and organize the quarterly team building event for all departments.',
-                priority: 'postponable',
-                status: 'new',
-                createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-            },
-            {
-                id: 4,
-                title: 'Security Audit Report',
-                description: 'Complete the quarterly security audit and submit findings to management.',
-                priority: 'high',
-                status: 'progress',
-                progress: 65,
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
-            },
-            {
-                id: 5,
-                title: 'Mobile App Testing',
-                description: 'Conduct comprehensive testing of the new mobile application features.',
-                priority: 'normal',
-                status: 'progress',
-                progress: 40,
-                createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week ago
-            },
-            {
-                id: 6,
-                title: 'Website Redesign',
-                description: 'Complete the new landing page design and implement responsive layout for mobile devices.',
-                priority: 'high',
-                status: 'completed',
-                completedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString() // 2 months ago
-            },
-            {
-                id: 7,
-                title: 'Database Migration',
-                description: 'Migrate user data from old database system to new PostgreSQL setup with improved performance.',
-                priority: 'normal',
-                status: 'completed',
-                completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-            },
-            {
-                id: 8,
-                title: 'Code Review',
-                description: 'Review pull requests for the authentication module and provide feedback to team members.',
-                priority: 'postponable',
-                status: 'completed',
-                completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
-            },
-            {
-                id: 9,
-                title: 'Client Presentation',
-                description: 'Prepare and deliver project presentation to client stakeholders.',
-                priority: 'high',
-                status: 'completed',
-                completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week ago
-            }
         ];
     },
 
@@ -411,22 +333,6 @@ const UserAuth = {
                 time: '23:59',
                 priority: 'high'
             },
-            {
-                id: 2,
-                title: 'Team Meeting',
-                description: 'Quarterly review meeting',
-                date: '2024-12-20',
-                time: '14:00',
-                priority: 'normal'
-            },
-            {
-                id: 3,
-                title: 'Code Review Session',
-                description: 'Weekly code review with team',
-                date: '2024-12-22',
-                time: '10:00',
-                priority: 'low'
-            }
         ];
     },
 
