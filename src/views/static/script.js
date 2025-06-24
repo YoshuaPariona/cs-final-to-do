@@ -92,16 +92,17 @@ const UserAuth = {
             // Cargar tareas desde backend
             const tasksResp = await window.pywebview.api.get_item('get_tasks', {});
             if (tasksResp.success) {
+                // Usar los campos tal como los entrega el backend: id, name, description, priority, status, start_date, end_date, created_at, completed_at
                 AppState.tasks = (tasksResp.tasks || []).map(t => ({
                     id: t.id,
-                    title: t.name,
+                    name: t.name, // Usar 'name' en vez de 'title' para consistencia con backend
                     description: t.description,
                     priority: t.priority,
                     status: t.status,
                     start_date: t.start_date,
                     end_date: t.end_date,
-                    createdAt: t.created_at,
-                    completedAt: t.completed_at
+                    created_at: t.created_at,
+                    completed_at: t.completed_at
                 }));
             } else {
                 AppState.tasks = [];
@@ -1169,3 +1170,8 @@ function showLogin() {
     UserAuth.clearEmailError();
     UserAuth.clearPasswordError();
 }
+
+// NOTA: El backend ahora entrega los campos de tarea como:
+// id, name, description, priority, status, start_date, end_date, created_at, completed_at
+// El mapeo de estados es: 'todo' → 'new', 'pending' → 'progress', 'completed' → 'completed'.
+// Si necesitas agregar más mapeos, hazlo aquí o en el backend.

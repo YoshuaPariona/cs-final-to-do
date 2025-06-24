@@ -77,6 +77,7 @@ class TaskController:
         start_date: datetime,
         end_date: datetime,
         priority: str,
+        status: str = 'todo',  # Permitir status opcional, default 'todo'
     ) -> Tuple[bool, str]:
         """
         Crea una nueva tarea para el usuario autenticado.
@@ -96,17 +97,18 @@ class TaskController:
         user = self.repository.get_user_by_email(self.current_user)
         if not user:
             return False, "Usuario no encontrado"
-        tarea = Tarea(
+        # Usar el método del repositorio para crear la tarea
+        tarea = self.repository.create_task(
             titulo=name,
             descripcion=description,
             fechaCreacion=start_date,
             fechaVencimiento=end_date,
-            estado='todo',
+            estado=status,
             prioridad=priority,
             tipo='General',
             idUsuario=user.idUsuario
         )
-        if self.repository.save_task(tarea):
+        if tarea:
             return True, "Tarea creada exitosamente"
         return False, "Error al crear la tarea"
 

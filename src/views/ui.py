@@ -91,6 +91,7 @@ class Api:
                 start_date = datetime.fromisoformat(data.get('start_date'))
                 end_date = datetime.fromisoformat(data.get('end_date'))
                 priority = data.get('priority')
+                status = data.get('status')  # Corregido: obtener status correctamente
                 success, message = self.controller.update_task(
                     task_id=task_id,
                     name=data.get('name'),
@@ -98,7 +99,7 @@ class Api:
                     start_date=start_date,
                     end_date=end_date,
                     priority=priority,
-                    estado=data.set('status')
+                    status=status  # Corregido: pasar status correctamente
                 )
                 tasks = self.controller.get_user_tasks()
                 updated_task = next((t for t in tasks if getattr(t, 'task_id', getattr(t, 'idTarea', None)) == task_id), None)
