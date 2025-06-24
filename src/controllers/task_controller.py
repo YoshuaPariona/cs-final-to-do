@@ -1,9 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Tuple
-
-from src.models.models import *
-from src.models.user import User
-from src.models.task import Task, TaskPriority, TaskStatus
+from src.models.models import Usuario, Tarea, Event
 from src.database.repository import Repository
 
 
@@ -36,37 +33,31 @@ class TaskController:
         Returns:
             Tuple[bool, str]: Éxito y mensaje de resultado.
         """
-        user = User(username=username, email=email, password=password)  # Modelo de logica de negocio
-        is_valid, error_msg = user.validate()
-        if not is_valid:
-            return False, error_msg
-
-        if self.repository.get_email(email):
+        if self.repository.get_user_by_email(email):
             return False, "El correo ya está en uso"
-
         db_user = Usuario(nombre=username, email=email, contraseña=password, modoOscuro=False) # Modelo alchemy
 
         if self.repository.save_user(db_user):
             return True, "Usuario registrado exitosamente"
         return False, "Error al registrar usuario"
 
-    def login(self, username: str, password: str) -> Tuple[bool, str]:
+    def login(self, email: str, password: str) -> Tuple[bool, str, Optional[dict]]:
         """
         Inicia sesión para un usuario.
 
         Args:
-            username (str): Nombre o correo del usuario.
+            email (str): Correo del usuario.
             password (str): Contraseña del usuario.
 
         Returns:
             Tuple[bool, str]: Éxito y mensaje de resultado.
         """
-        user = self.repository.get_user(username, password)
+        user = self.repository.get_user_by_email(email)
         if not user:
-            return False, "Usuario no encontrado"
+            return False, "Usuario no encontrado", None
 
         if user.contraseña != password:
-            return False, "Contraseña incorrecta"
+            return False, "Contraseña incorrecta", None
 
         self.current_user = user.email  # Guardar usuario logueado por email
         return True, "Inicio de sesión exitoso", {"email": user.email, "name": user.nombre}
@@ -102,10 +93,9 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-        user = self.repository.get_email(self.current_user)
+        user = self.repository.get_user_by_email(self.current_user)
         if not user:
             return False, "Usuario no encontrado"
-        from src.models.models import Tarea
         tarea = Tarea(
             titulo=name,
             descripcion=description,
@@ -146,10 +136,9 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-        user = self.repository.get_email(self.current_user)
+        user = self.repository.get_user_by_email(self.current_user)
         if not user:
             return False, "Usuario no encontrado"
-        from src.models.models import Tarea
         tarea = self.repository.db.query(Tarea).filter_by(idTarea=task_id, idUsuario=user.idUsuario).first()
         if not tarea:
             return False, "Tarea no encontrada"
@@ -158,6 +147,7 @@ class TaskController:
         tarea.fechaCreacion = start_date
         tarea.fechaVencimiento = end_date
         tarea.prioridad = priority
+        tarea.estado = status
         self.repository.db.commit()
         return True, "Tarea actualizada exitosamente"
 
@@ -173,22 +163,16 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-
-        try:
-            tasks = self.repository.get_user_tasks(self.current_user)
-            task = next((t for t in tasks if t.task_id == task_id), None)
-            if not task:
-                return False, "Tarea no encontrada"
-
-            task.status = TaskStatus.COMPLETED
-            task.completed_at = datetime.now()
-
-            if self.repository.save_task(task):
-                return True, "Tarea completada exitosamente"
-            return False, "Error al completar la tarea"
-
-        except Exception as e:
-            return False, f"Error inesperado: {str(e)}"
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        tarea = self.repository.db.query(Tarea).filter_by(idTarea=task_id, idUsuario=user.idUsuario).first()
+        if not tarea:
+            return False, "Tarea no encontrada"
+        tarea.estado = 'completed'
+        tarea.fechaVencimiento = datetime.now()
+        self.repository.db.commit()
+        return True, "Tarea completada exitosamente"
 
     def delete_task(self, task_id: int) -> Tuple[bool, str]:
         """
@@ -202,12 +186,14 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-
-        if self.repository.delete_task(task_id, self.current_user):
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        if self.repository.delete_task(task_id, user.idUsuario):
             return True, "Tarea eliminada exitosamente"
         return False, "Error al eliminar la tarea"
 
-    def get_tasks(self, filter_completed: bool = False) -> List[Task]:
+    def get_tasks(self, filter_completed: bool = False) -> List[Tarea]:
         """
         Obtiene todas las tareas del usuario actual.
 
@@ -220,9 +206,15 @@ class TaskController:
         """
         if not self.current_user:
             return []
-        return self.repository.get_user_tasks(self.current_user)
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return []
+        tareas = self.repository.get_tasks_by_user(user.idUsuario)
+        if filter_completed:
+            return [t for t in tareas if t.estado != 'completed']
+        return tareas
 
-    def get_task_by_id(self, task_id: int) -> Optional[Task]:
+    def get_task_by_id(self, task_id: int) -> Optional[Tarea]:
         """
         Obtiene una tarea por su ID para el usuario autenticado.
 
@@ -234,53 +226,19 @@ class TaskController:
         """
         if not self.current_user:
             return None
-
-        tasks = self.repository.get_user_tasks(self.current_user)
-        return next((t for t in tasks if t.task_id == task_id), None)
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return None
+        return self.repository.db.query(Tarea).filter_by(idTarea=task_id, idUsuario=user.idUsuario).first()
 
     def cleanup_completed_tasks(self):
         """Elimina tareas completadas hace más de X días."""
         self.repository.cleanup_completed_tasks()
 
-    def get_tasks_by_user(
-        self, username: str, filter_completed: bool = False
-    ) -> List[Task]:
-        """
-        Obtiene tareas de un usuario dado sin necesidad de login.
-
-        Args:
-            username (str): Nombre de usuario.
-            filter_completed (bool, optional): Si True, filtra tareas completadas.
-                                               Defaults to False.
-
-        Returns:
-            List[Task]: Lista de tareas.
-        """
-        user = self.repository.get_user_tasks(username)
-        if not user:
-            return []
-
-        tasks = self.repository.get_user_tasks(username)
-        if filter_completed:
-            return [t for t in tasks if t.status != TaskStatus.COMPLETED]
-        return tasks
-
-    def get_user_tasks(self) -> List[Task]:
-        """
-        Obtiene tareas del usuario autenticado.
-
-        Returns:
-            List[Task]: Lista de tareas o vacía si no autenticado.
-        """
-        if self.current_user is None:
-            return []
-        return self.repository.get_user_tasks(self.current_user)
-
     def create_event(self, title, description, date, time, priority):
         if not self.current_user:
             return False, "Usuario no autenticado"
-        from src.models.models import Event
-        user = self.repository.get_email(self.current_user)
+        user = self.repository.get_user_by_email(self.current_user)
         if not user:
             return False, "Usuario no encontrado"
         event = Event(
@@ -298,11 +256,60 @@ class TaskController:
     def get_user_events(self):
         if not self.current_user:
             return []
-        return self.repository.get_user_events(self.current_user)
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return []
+        return self.repository.get_user_events(user.idUsuario)
+
+    def get_user_tasks(self, *args, **kwargs):
+        return self.get_tasks(*args, **kwargs)
 
     def delete_event(self, event_id):
         if not self.current_user:
             return False, "Usuario no autenticado"
-        if self.repository.delete_event(event_id, self.current_user):
+        user = self.repository.get_user_by_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        if self.repository.delete_event(event_id, user.idUsuario):
             return True, "Evento eliminado exitosamente"
         return False, "Error al eliminar evento"
+
+    def seed_initial_tasks(self):
+        """Crea tareas demo para los usuarios iniciales si no existen."""
+        try:
+            admin = self.get_user_by_email('admin@gmail.com')
+            user = self.get_user_by_email('user@example.com')
+            if admin and not self.get_tasks_by_user(admin.idUsuario):
+                self.create_task(
+                    titulo='Demo Admin Task',
+                    descripcion='Tarea de ejemplo para Admin',
+                    fechaCreacion=datetime.utcnow(),
+                    fechaVencimiento=datetime.utcnow(),
+                    estado='todo',
+                    prioridad='Importante',
+                    tipo='General',
+                    idUsuario=admin.idUsuario
+                )
+            if user and not self.get_tasks_by_user(user.idUsuario):
+                self.create_task(
+                    titulo='Demo User Task',
+                    descripcion='Tarea de ejemplo para User',
+                    fechaCreacion=datetime.utcnow(),
+                    fechaVencimiento=datetime.utcnow(),
+                    estado='todo',
+                    prioridad='Normal',
+                    tipo='General',
+                    idUsuario=user.idUsuario
+                )
+        except Exception as e:
+            print(f"Error al crear tareas iniciales: {e}")
+            
+    def seed_initial_users(self):
+        """Crea usuarios demo si no existen."""
+        try:
+            if not self.get_user_by_email('admin@gmail.com'):
+                self.create_user('Admin', 'admin@gmail.com', 'admin', False)
+            if not self.get_user_by_email('user@example.com'):
+                self.create_user('User', 'user@example.com', 'user123', False)
+        except Exception as e:
+            print(f"Error al crear usuarios iniciales: {e}")
