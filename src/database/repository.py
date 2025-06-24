@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from .db import SessionLocal
-from src.models.models import Usuario, Tarea, TipoTarea, Grupo
+from src.models.models import Usuario, Tarea, TipoTarea, Grupo, Event
 from src.models.task import TaskStatus  # Si usas enums personalizados
 
 
@@ -58,22 +58,18 @@ class Repository:
             print(f"Error al obtener email: {e}")
             return None
 
-    def get_user(self, email: str, password: str) -> Optional[Usuario]:
+    def get_user(self, username_or_email: str, password: str) -> Optional[Usuario]:
         """
-        Obtiene un usuario por su email.
-
-        Args:
-            email (str): Email del usuario.
-
-        Returns:
-            Optional[Usuario]: Usuario encontrado o None si no existe.
+        Obtiene un usuario por su email o nombre de usuario y contraseña.
         """
         try:
-            return self.db.query(Usuario).filter_by(email=email, contraseña=password).first()
+            if '@' in username_or_email:
+                return self.db.query(Usuario).filter_by(email=username_or_email, contraseña=password).first()
+            else:
+                return self.db.query(Usuario).filter_by(nombre=username_or_email, contraseña=password).first()
         except SQLAlchemyError as e:
             print(f"Error al obtener usuario: {e}")
             return None
-
 
     def delete_user(self, email: str) -> bool:
         """
@@ -117,18 +113,22 @@ class Repository:
             self.db.rollback()
             return False
 
-    def get_user_tasks(self, Email: int) -> List[Tarea]:
+    def get_user_tasks(self, user_identifier) -> List[Tarea]:
         """
-        Obtiene todas las tareas asociadas a un email de usuario.
-
-        Args:
-            Email (int): Email del usuario (debería ser str?).
-
-        Returns:
-            List[Tarea]: Lista de tareas.
+        Obtiene todas las tareas asociadas a un usuario (por email o idUsuario).
         """
         try:
-            return self.db.query(Tarea).filter_by(email=Email).all()
+            # Si es un email, buscar el usuario y obtener su idUsuario
+            if isinstance(user_identifier, str) and '@' in user_identifier:
+                user = self.get_email(user_identifier)
+                if not user:
+                    return []
+                user_id = user.idUsuario
+            elif isinstance(user_identifier, int):
+                user_id = user_identifier
+            else:
+                return []
+            return self.db.query(Tarea).filter_by(idUsuario=user_id).all()
         except SQLAlchemyError as e:
             print(f"Error al obtener tareas: {e}")
             return []
@@ -188,3 +188,108 @@ class Repository:
         except SQLAlchemyError as e:
             print(f"Error al limpiar tareas completadas: {e}")
             self.db.rollback()
+
+    def seed_initial_users(self):
+        """
+        Crea los usuarios iniciales Admin y User si no existen.
+        """
+        try:
+            admin = self.get_email('admin@gmail.com')
+            if not admin:
+                admin_user = Usuario(nombre='Admin', email='admin@gmail.com', contraseña='admin', modoOscuro=False)
+                self.db.add(admin_user)
+            user = self.get_email('user@example.com')
+            if not user:
+                normal_user = Usuario(nombre='User', email='user@example.com', contraseña='user123', modoOscuro=False)
+                self.db.add(normal_user)
+            self.db.commit()
+        except Exception as e:
+            print(f"Error al crear usuarios iniciales: {e}")
+
+    def seed_initial_tasks(self):
+        """
+        Crea una tarea demo para cada usuario inicial si no existen tareas.
+        """
+        try:
+            admin = self.get_email('admin@gmail.com')
+            user = self.get_email('user@example.com')
+            if admin:
+                tareas_admin = self.get_user_tasks(admin.idUsuario)
+                if not tareas_admin:
+                    tarea = Tarea(
+                        titulo='Demo Admin Task',
+                        descripcion='Tarea de ejemplo para Admin',
+                        fechaCreacion=datetime.utcnow(),
+                        fechaVencimiento=datetime.utcnow(),
+                        estado='todo',
+                        prioridad='Importante',
+                        tipo='General',
+                        idUsuario=admin.idUsuario
+                    )
+                    self.db.add(tarea)
+            if user:
+                tareas_user = self.get_user_tasks(user.idUsuario)
+                if not tareas_user:
+                    tarea = Tarea(
+                        titulo='Demo User Task',
+                        descripcion='Tarea de ejemplo para User',
+                        fechaCreacion=datetime.utcnow(),
+                        fechaVencimiento=datetime.utcnow(),
+                        estado='todo',
+                        prioridad='Normal',
+                        tipo='General',
+                        idUsuario=user.idUsuario
+                    )
+                    self.db.add(tarea)
+            self.db.commit()
+        except Exception as e:
+            print(f"Error al crear tareas iniciales: {e}")
+
+    def save_event(self, event):
+        try:
+            self.db.add(event)
+            self.db.commit()
+            self.db.refresh(event)
+            return True
+        except Exception as e:
+            print(f"Error al guardar evento: {e}")
+            self.db.rollback()
+            return False
+
+    def get_user_events(self, user_identifier):
+        try:
+            if isinstance(user_identifier, str) and '@' in user_identifier:
+                user = self.get_email(user_identifier)
+                if not user:
+                    return []
+                user_id = user.idUsuario
+            elif isinstance(user_identifier, int):
+                user_id = user_identifier
+            else:
+                return []
+            return self.db.query(Event).filter_by(idUsuario=user_id).all()
+        except Exception as e:
+            print(f"Error al obtener eventos: {e}")
+            return []
+
+    def delete_event(self, idEvento, user_identifier):
+        try:
+            if isinstance(user_identifier, str) and '@' in user_identifier:
+                user = self.get_email(user_identifier)
+                if not user:
+                    return False
+                user_id = user.idUsuario
+            elif isinstance(user_identifier, int):
+                user_id = user_identifier
+            else:
+                return False
+            event = self.db.query(Event).filter_by(idEvento=idEvento, idUsuario=user_id).first()
+            if not event:
+                return False
+            self.db.delete(event)
+            self.db.commit()
+            return True
+        except Exception as e:
+            print(f"Error al eliminar evento: {e}")
+            self.db.rollback()
+            return False

@@ -106,3 +106,15 @@ class Tarea(Base):
     usuario = relationship("Usuario", back_populates="tareas")
     grupo = relationship("Grupo", back_populates="tareas")
     tipo_tarea = relationship("TipoTarea", back_populates="tareas")
+
+
+class Event(Base):
+    __tablename__ = 'eventos'
+    idEvento = Column(Integer, primary_key=True, autoincrement=True)
+    titulo = Column(String)
+    descripcion = Column(Text)
+    fecha = Column(String)  # ISO date string
+    hora = Column(String)   # HH:MM
+    prioridad = Column(String)
+    idUsuario = Column(Integer, ForeignKey('usuarios.idUsuario'))
+    usuario = relationship("Usuario")

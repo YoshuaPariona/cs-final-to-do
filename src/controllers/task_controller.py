@@ -18,6 +18,9 @@ class TaskController:
         """
         self.repository = Repository()
         self.current_user = None
+        # Seed de usuarios y tareas iniciales
+        self.repository.seed_initial_users()
+        self.repository.seed_initial_tasks()
 
     # Controladores de usuarios
 
@@ -99,30 +102,23 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-
-        try:
-            task = Task(
-                name=name,
-                description=description,
-                start_date=start_date,
-                end_date=end_date,
-                priority=TaskPriority(priority),
-                user_id=self.current_user,
-            )
-
-            is_valid, error_msg = task.validate()
-            if not is_valid:
-                return False, error_msg
-
-            if self.repository.save_task(task):
-                return True, "Tarea creada exitosamente"
-
-            return False, "Error al crear la tarea"
-
-        except ValueError as e:
-            return False, f"Error de validación: {str(e)}"
-        except Exception as e:
-            return False, f"Error inesperado: {str(e)}"
+        user = self.repository.get_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        from src.models.models import Tarea
+        tarea = Tarea(
+            titulo=name,
+            descripcion=description,
+            fechaCreacion=start_date,
+            fechaVencimiento=end_date,
+            estado='todo',
+            prioridad=priority,
+            tipo='General',
+            idUsuario=user.idUsuario
+        )
+        if self.repository.save_task(tarea):
+            return True, "Tarea creada exitosamente"
+        return False, "Error al crear la tarea"
 
     def update_task(
         self,
@@ -132,6 +128,7 @@ class TaskController:
         start_date: datetime,
         end_date: datetime,
         priority: str,
+        status: str,
     ) -> Tuple[bool, str]:
         """
         Actualiza una tarea existente del usuario autenticado.
@@ -149,31 +146,20 @@ class TaskController:
         """
         if not self.current_user:
             return False, "Usuario no autenticado"
-
-        try:
-            tasks = self.repository.get_user_tasks(self.current_user)
-            task = next((t for t in tasks if t.task_id == task_id), None)
-            if not task:
-                return False, "Tarea no encontrada"
-
-            task.name = name
-            task.description = description
-            task.start_date = start_date
-            task.end_date = end_date
-            task.priority = TaskPriority(priority)
-
-            is_valid, error_msg = task.validate()
-            if not is_valid:
-                return False, error_msg
-
-            if self.repository.save_task(task):
-                return True, "Tarea actualizada exitosamente"
-            return False, "Error al actualizar la tarea"
-
-        except ValueError as e:
-            return False, f"Error de validación: {str(e)}"
-        except Exception as e:
-            return False, f"Error inesperado: {str(e)}"
+        user = self.repository.get_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        from src.models.models import Tarea
+        tarea = self.repository.db.query(Tarea).filter_by(idTarea=task_id, idUsuario=user.idUsuario).first()
+        if not tarea:
+            return False, "Tarea no encontrada"
+        tarea.titulo = name
+        tarea.descripcion = description
+        tarea.fechaCreacion = start_date
+        tarea.fechaVencimiento = end_date
+        tarea.prioridad = priority
+        self.repository.db.commit()
+        return True, "Tarea actualizada exitosamente"
 
     def complete_task(self, task_id: int) -> Tuple[bool, str]:
         """
@@ -289,3 +275,34 @@ class TaskController:
         if self.current_user is None:
             return []
         return self.repository.get_user_tasks(self.current_user)
+
+    def create_event(self, title, description, date, time, priority):
+        if not self.current_user:
+            return False, "Usuario no autenticado"
+        from src.models.models import Event
+        user = self.repository.get_email(self.current_user)
+        if not user:
+            return False, "Usuario no encontrado"
+        event = Event(
+            titulo=title,
+            descripcion=description,
+            fecha=date,
+            hora=time,
+            prioridad=priority,
+            idUsuario=user.idUsuario
+        )
+        if self.repository.save_event(event):
+            return True, "Evento creado exitosamente"
+        return False, "Error al crear evento"
+
+    def get_user_events(self):
+        if not self.current_user:
+            return []
+        return self.repository.get_user_events(self.current_user)
+
+    def delete_event(self, event_id):
+        if not self.current_user:
+            return False, "Usuario no autenticado"
+        if self.repository.delete_event(event_id, self.current_user):
+            return True, "Evento eliminado exitosamente"
+        return False, "Error al eliminar evento"

@@ -624,6 +624,21 @@ button.btn-link:focus {
     flex-direction: column;
     gap: 16px;
     min-height: 200px;
+    min-width: 100px;
+    padding: 8px 0;
+}
+
+.task-cards-container.drag-over {
+    background: #e0e7ff;
+    border: 2px dashed #3b82f6;
+}
+
+.task-card[draggable="true"] {
+    cursor: grab;
+}
+
+.task-card[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 /* ===== TASK ACTIONS MENU ===== */
@@ -1453,4 +1468,51 @@ button.btn-link:focus {
 
 .dark-theme ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
+}
+
+.btn-move-new {
+    background: #f1f5f9;
+    color: #2563eb;
+    border: 1px solid #93c5fd;
+}
+.btn-move-new:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.btn-move-progress {
+    background: #fef9c3;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+.btn-move-progress:hover {
+    background: #fef08a;
+    color: #92400e;
+}
+
+.btn-move-completed {
+    background: #dcfce7;
+    color: #059669;
+    border: 1px solid #6ee7b7;
+}
+.btn-move-completed:hover {
+    background: #bbf7d0;
+    color: #047857;
+}
+
+.status-update-msg {
+    background: #f1f5f9;
+    color: #2563eb;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    margin: 8px 0 16px 0;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px 0 rgba(59,130,246,0.08);
+    transition: opacity 0.3s;
+    opacity: 1;
+    z-index: 10;
+    position: relative;
+    text-align: center;
 }

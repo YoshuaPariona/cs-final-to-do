@@ -79,34 +79,35 @@ const UserAuth = {
         // Show loading state
         this.showLoadingState();
         
-        // Simulate API call delay
-        // await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const response = await window.pywebview.api.get_item("get_user", {email, password})
-        const data = response.data;
+        const response = await window.pywebview.api.get_item("get_user", {email, password});
+        const data = response.user;
 
-        // Check credentials against user database
-        // const user = AppState.users.find(u => u.email === email && u.password === password);
-        
-        if (response.success) {
-            // Successful login
+        if (response.success && data) {
             AppState.currentUser = {
                 email: data.email,
                 name: data.name,
                 role: data.role || "user",
                 loginTime: new Date().toISOString()
             };
-            
-            // Save session
-            localStorage.setItem('currentUser', JSON.stringify(AppState.currentUser));
-            
-            // Load user-specific data
-            this.loadUserData();
-        
-            // Show application
+            // Cargar tareas desde backend
+            const tasksResp = await window.pywebview.api.get_item('get_tasks', {});
+            if (tasksResp.success) {
+                AppState.tasks = (tasksResp.tasks || []).map(t => ({
+                    id: t.id,
+                    title: t.name,
+                    description: t.description,
+                    priority: t.priority,
+                    status: t.status,
+                    start_date: t.start_date,
+                    end_date: t.end_date,
+                    createdAt: t.created_at,
+                    completedAt: t.completed_at
+                }));
+            } else {
+                AppState.tasks = [];
+            }
             this.showApp();
         } else {
-            // Failed login
             this.showLoginError('Invalid email or password. Please try again.');
         }
         
@@ -269,7 +270,9 @@ const UserAuth = {
         document.getElementById('signupPage').style.display = 'none';
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('loginForm').reset();
-        // Limpia errores si tienes funciones para ello
+        this.clearEmailError();
+        this.clearPasswordError();
+        this.hideLoadingState();
     },
     // Hide loading state
     hideLoadingState() {
@@ -284,28 +287,9 @@ const UserAuth = {
 
     // Load user-specific data
     loadUserData() {
-        const userKey = `userData_${AppState.currentUser.email}`;
-        const savedData = localStorage.getItem(userKey);
-        
-        if (savedData) {
-            try {
-                const userData = JSON.parse(savedData);
-                AppState.tasks = userData.tasks || [];
-                AppState.events = userData.events || [];
-                AppState.settings = userData.settings || {};
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        }
-        
-        // Initialize with default data if empty
-        if (AppState.tasks.length === 0) {
-            this.initializeDefaultTasks();
-        }
-        
-        if (AppState.events.length === 0) {
-            this.initializeDefaultEvents();
-        }
+        // Ya no se usa localStorage para tareas
+        // Las tareas se cargan desde el backend al iniciar sesión
+        // Esta función puede quedar vacía o solo para settings/eventos si se desea
     },
 
     // Initialize default tasks
@@ -391,15 +375,11 @@ const UserAuth = {
 
     // Logout function
     logout() {
-        // Save current user data before logout
-        this.saveUserData();
-        
         // Clear session
         AppState.currentUser = null;
         localStorage.removeItem('currentUser');
-        
-        // Show login page
         this.showLogin();
+        this.hideLoadingState();
     }
 };
 
@@ -439,7 +419,7 @@ const Navigation = {
     },
 
     // Show specific page content
-    showPage(pageId) {
+    async showPage(pageId) {
         // Hide all pages
         document.querySelectorAll('.page-content').forEach(page => {
             page.classList.remove('active');
@@ -452,16 +432,17 @@ const Navigation = {
         }
         
         // Update page-specific content
-        this.updatePageContent(pageId);
+        await this.updatePageContent(pageId);
     },
 
     // Update page-specific content
-    updatePageContent(pageId) {
+    async updatePageContent(pageId) {
         switch(pageId) {
             case 'dashboard':
                 this.updateDashboard();
                 break;
             case 'tasks':
+                await TaskManager.loadTasksFromBackend();
                 TaskManager.renderTasks();
                 break;
             case 'calendar':
@@ -477,7 +458,6 @@ const Navigation = {
     updateDashboard() {
         // Update dashboard stats
         const stats = TaskManager.getTaskStats();
-        
         const statCards = document.querySelectorAll('.stat-card');
         if (statCards.length >= 4) {
             statCards[0].querySelector('.stat-number').textContent = stats.total;
@@ -485,7 +465,8 @@ const Navigation = {
             statCards[2].querySelector('.stat-number').textContent = stats.inProgress;
             statCards[3].querySelector('.stat-number').textContent = stats.new;
         }
-        
+        // Render recent tasks
+        TaskManager.renderRecentTasks();
         console.log('Dashboard updated for user:', AppState.currentUser.email);
     }
 };
@@ -494,10 +475,30 @@ const Navigation = {
 const TaskManager = {
     currentEditingTask: null,
 
-    // Initialize task manager
-    init() {
+    // Inicializar y cargar tareas desde backend
+    async init() {
+        await this.loadTasksFromBackend();
         this.setupEventListeners();
         this.renderTasks();
+    },
+
+    async loadTasksFromBackend() {
+        const response = await window.pywebview.api.get_item('get_tasks', {});
+        if (response.success) {
+            AppState.tasks = (response.tasks || []).map(t => ({
+                id: t.id,
+                title: t.name,
+                description: t.description,
+                priority: t.priority,
+                status: t.status,
+                start_date: t.start_date,
+                end_date: t.end_date,
+                createdAt: t.created_at,
+                completedAt: t.completed_at
+            }));
+        } else {
+            AppState.tasks = [];
+        }
     },
 
     // Setup task event listeners
@@ -506,10 +507,8 @@ const TaskManager = {
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 this.closeModal();
-                this.closeEventModal();
             }
         });
-
         // Close task menus when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.task-actions-menu')) {
@@ -526,92 +525,93 @@ const TaskManager = {
         const completed = AppState.tasks.filter(task => task.status === 'completed').length;
         const inProgress = AppState.tasks.filter(task => task.status === 'progress').length;
         const newTasks = AppState.tasks.filter(task => task.status === 'new').length;
-        
         return { total, completed, inProgress, new: newTasks };
     },
 
     // Render all tasks
     renderTasks() {
-        this.renderTasksByStatus('new');
-        this.renderTasksByStatus('progress');
-        this.renderTasksByStatus('completed');
+        // Render encabezados y tareas por estado
+        this.renderSectionWithHeader('new', 'Nuevas');
+        this.renderSectionWithHeader('progress', 'En Proceso');
+        this.renderSectionWithHeader('completed', 'Completadas');
         this.updateTaskCounts();
+        // Sincronizar dashboard
+        if (typeof TaskManager.renderRecentTasks === 'function') {
+            TaskManager.renderRecentTasks();
+        }
+    },
+
+    renderSectionWithHeader(status, label) {
+        const container = document.getElementById(`${status}TasksContainer`);
+        if (!container) return;
+        // Encabezado: buscar el .section-title dentro del .section-header padre
+        const sectionHeader = container.parentElement.querySelector('.section-header');
+        if (sectionHeader) {
+            const titleElem = sectionHeader.querySelector('.section-title');
+            if (titleElem) titleElem.textContent = label;
+        }
+        // Render tareas
+        const tasks = AppState.tasks.filter(task => task.status === status);
+        this.renderTaskCards(tasks, container, status);
+        console.log(`[TaskManager] Rendered ${tasks.length} tasks for status: ${status}`);
     },
 
     // Render tasks by status
     renderTasksByStatus(status) {
-        const container = document.getElementById(`${status}TasksContainer`) || 
-                         document.getElementById(`${status === 'progress' ? 'progress' : status}TasksContainer`);
-        
+        const container = document.getElementById(`${status}TasksContainer`);
         if (!container) return;
-        
         const tasks = AppState.tasks.filter(task => task.status === status);
+        this.renderTaskCards(tasks, container, status);
+        console.log(`[TaskManager] Rendered ${tasks.length} tasks for status: ${status}`);
+    },
+
+    // Render a list of tasks in a given container (dashboard style)
+    renderTaskCards(tasks, container, status = null) {
         container.innerHTML = '';
-        
-        tasks.forEach(task => {
-            const taskCard = this.createTaskCard(task);
-            container.appendChild(taskCard);
-        });
-    },
-
-    // Create task card element
-    createTaskCard(task) {
-        const card = document.createElement('div');
-        card.className = `task-card ${task.status}`;
-        card.dataset.taskId = task.id;
-        
-        const timeText = task.status === 'completed' 
-            ? `Completed ${Utils.formatDate(task.completedAt)}`
-            : task.status === 'progress' 
-                ? `Started ${Utils.formatDate(task.createdAt)}`
-                : `Created ${Utils.formatDate(task.createdAt)}`;
-        
-        card.innerHTML = `
-            <div class="task-header">
-                <h3 class="task-title">${task.title}</h3>
-                ${task.status === 'completed' 
-                    ? '<span class="task-status">✓</span>'
-                    : `<div class="task-actions-menu">
-                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                        <div class="task-menu">
-                            ${this.getTaskMenuItems(task)}
-                        </div>
-                    </div>`
-                }
-            </div>
-            <p class="task-description">${task.description}</p>
-            <div class="task-footer">
-                <span class="task-time">${timeText}</span>
-                <span class="task-priority ${task.priority}">${this.getPriorityLabel(task.priority)}</span>
-            </div>
-            ${task.status === 'progress' && task.progress ? `
-                <div class="task-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${task.progress}%"></div>
-                    </div>
-                    <span class="progress-text">${task.progress}% Complete</span>
-                </div>
-            ` : ''}
-        `;
-        
-        return card;
-    },
-
-    // Get task menu items based on status
-    getTaskMenuItems(task) {
-        const items = [];
-        
-        if (task.status === 'new') {
-            items.push(`<button onclick="TaskManager.moveTask(${task.id}, 'progress')">Move to Progress</button>`);
-        } else if (task.status === 'progress') {
-            items.push(`<button onclick="TaskManager.moveTask(${task.id}, 'completed')">Mark Complete</button>`);
-            items.push(`<button onclick="TaskManager.moveTask(${task.id}, 'new')">Move to New</button>`);
+        if (tasks.length === 0) {
+            let label = 'tasks';
+            if (status === 'new') label = 'new tasks';
+            else if (status === 'progress') label = 'in progress tasks';
+            else if (status === 'completed') label = 'completed tasks';
+            container.innerHTML = `<div style='color:#64748b;'>No ${label}.</div>`;
+            return;
         }
-        
-        items.push(`<button onclick="TaskManager.editTask(${task.id})">Edit</button>`);
-        items.push(`<button onclick="TaskManager.deleteTask(${task.id})">Delete</button>`);
-        
-        return items.join('');
+        tasks.forEach(task => {
+            const card = document.createElement('div');
+            card.className = `task-card ${task.status}`;
+            card.dataset.taskId = task.id;
+            // Botones de acción según el estado
+            let actions = '';
+            if (status === 'new') {
+                actions = `
+                    <button class="btn-move-progress" onclick="TaskManager.moveTask(${task.id}, 'progress')">Mover a En Proceso</button>
+                    <button class="btn-move-completed" onclick="TaskManager.moveTask(${task.id}, 'completed')">Completar</button>
+                `;
+            } else if (status === 'progress') {
+                actions = `
+                    <button class="btn-move-new" onclick="TaskManager.moveTask(${task.id}, 'new')">Mover a Nuevas</button>
+                    <button class="btn-move-completed" onclick="TaskManager.moveTask(${task.id}, 'completed')">Completar</button>
+                `;
+            } else if (status === 'completed') {
+                actions = `
+                    <button class="btn-move-new" onclick="TaskManager.moveTask(${task.id}, 'new')">Mover a Nuevas</button>
+                    <button class="btn-move-progress" onclick="TaskManager.moveTask(${task.id}, 'progress')">Mover a En Proceso</button>
+                `;
+            }
+            card.innerHTML = `
+                <div class="task-header">
+                    <h3 class="task-title">${task.title}</h3>
+                    ${task.status === 'completed' ? '<span class="task-status">✓</span>' : ''}
+                </div>
+                <p class="task-description">${task.description || ''}</p>
+                <div class="task-footer">
+                    <span class="task-time">${task.status === 'completed' ? 'Completed ' + Utils.formatDate(task.completedAt) : task.status === 'progress' ? 'Started ' + Utils.formatDate(task.createdAt) : 'Created ' + Utils.formatDate(task.createdAt)}</span>
+                    <span class="task-priority ${task.priority}">${this.getPriorityLabel(task.priority)}</span>
+                </div>
+                <div class="task-actions">${actions}</div>
+            `;
+            container.appendChild(card);
+        });
     },
 
     // Get priority label
@@ -628,99 +628,85 @@ const TaskManager = {
     toggleTaskMenu(button) {
         const menu = button.nextElementSibling;
         const isVisible = menu.classList.contains('show');
-        
-        // Close all other menus
         document.querySelectorAll('.task-menu').forEach(m => m.classList.remove('show'));
-        
-        // Toggle current menu
         if (!isVisible) {
             menu.classList.add('show');
         }
     },
 
     // Move task to different status
-    moveTask(taskId, newStatus) {
-        const task = AppState.tasks.find(t => t.id === taskId);
-        if (!task) return;
-        
-        task.status = newStatus;
-        
+    async moveTask(taskId, newStatus) {
+        let statusMsg = '';
+        let cardElem = document.querySelector(`.task-card[data-task-id='${taskId}']`);
+        // Realizar el cambio de estado
+        let response;
         if (newStatus === 'completed') {
-            task.completedAt = new Date().toISOString();
-            task.progress = 100;
-        } else if (newStatus === 'progress' && !task.progress) {
-            task.progress = 0;
+            response = await window.pywebview.api.toggle_item('complete_task', { task_id: taskId });
+        } else {
+            const task = AppState.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            response = await window.pywebview.api.update_item('update_task', {
+                task_id: taskId,
+                name: task.title,
+                description: task.description,
+                start_date: task.start_date,
+                end_date: task.end_date,
+                priority: task.priority,
+                status: newStatus
+            });
         }
-        
-        this.renderTasks();
-        UserAuth.saveUserData();
-        
-        // Close menu
-        document.querySelectorAll('.task-menu').forEach(menu => {
-            menu.classList.remove('show');
-        });
+        // Usar el status retornado si está disponible
+        const updatedStatus = response && response.updated_status ? response.updated_status : newStatus;
+        if (updatedStatus === 'completed') statusMsg = 'Tarea completada';
+        else if (updatedStatus === 'progress') statusMsg = 'Tarea movida a En Proceso';
+        else if (updatedStatus === 'new') statusMsg = 'Tarea movida a Nuevas';
+        if (response && response.success) {
+            await this.loadTasksFromBackend();
+            this.renderTasks();
+        }
+        document.querySelectorAll('.task-menu').forEach(menu => menu.classList.remove('show'));
+        // Mostrar mensaje de actualización de estado
+        if (cardElem && statusMsg) {
+            const msg = document.createElement('div');
+            msg.className = 'status-update-msg';
+            msg.textContent = statusMsg;
+            cardElem.insertAdjacentElement('afterend', msg);
+            setTimeout(() => { msg.remove(); }, 2000);
+        }
     },
 
     // Edit task
     editTask(taskId) {
         const task = AppState.tasks.find(t => t.id === taskId);
         if (!task) return;
-        
         this.currentEditingTask = task;
-        
-        // Populate form with task data
         document.getElementById('taskTitle').value = task.title;
         document.getElementById('taskDescription').value = task.description;
         document.getElementById('taskPriority').value = task.priority;
         document.getElementById('taskStatus').value = task.status;
         document.getElementById('modalTitle').textContent = 'Edit Task';
-        
-        // Show modal
         document.getElementById('taskModal').style.display = 'flex';
-        
-        // Close menu
-        document.querySelectorAll('.task-menu').forEach(menu => {
-            menu.classList.remove('show');
-        });
+        document.querySelectorAll('.task-menu').forEach(menu => menu.classList.remove('show'));
     },
 
     // Delete task
-    deleteTask(taskId) {
+    async deleteTask(taskId) {
         if (confirm('Are you sure you want to delete this task?')) {
-            AppState.tasks = AppState.tasks.filter(t => t.id !== taskId);
-            this.renderTasks();
-            UserAuth.saveUserData();
+            const response = await window.pywebview.api.remove_item('delete_task', { task_id: taskId });
+            if (response.success) {
+                await this.loadTasksFromBackend();
+                this.renderTasks();
+            }
         }
-        
-        // Close menu
-        document.querySelectorAll('.task-menu').forEach(menu => {
-            menu.classList.remove('show');
-        });
+        document.querySelectorAll('.task-menu').forEach(menu => menu.classList.remove('show'));
     },
 
     // Show add task modal
     showAddTaskModal() {
         this.currentEditingTask = null;
-        
-        // Clear form
         document.getElementById('taskForm').reset();
         document.getElementById('modalTitle').textContent = 'Add New Task';
-        
-        // Show modal
         document.getElementById('taskModal').style.display = 'flex';
-    },
-
-    // Show add event modal
-    showAddEventModal() {
-        // Clear form
-        document.getElementById('eventForm').reset();
-        
-        // Set default date to today
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('eventDate').value = today;
-        
-        // Show modal
-        document.getElementById('eventModal').style.display = 'flex';
     },
 
     // Close task modal
@@ -729,100 +715,111 @@ const TaskManager = {
         this.currentEditingTask = null;
     },
 
-    // Close event modal
-    closeEventModal() {
-        document.getElementById('eventModal').style.display = 'none';
-    },
-
     // Save task
-    saveTask() {
+    async saveTask() {
         const title = document.getElementById('taskTitle').value.trim();
         const description = document.getElementById('taskDescription').value.trim();
         const priority = document.getElementById('taskPriority').value;
         const status = document.getElementById('taskStatus').value;
-        
+        const now = new Date().toISOString();
+        let start_date = now;
+        let end_date = now;
+        if (this.currentEditingTask) {
+            start_date = this.currentEditingTask.start_date || now;
+            end_date = this.currentEditingTask.end_date || now;
+        }
         if (!title) {
             alert('Please enter a task title');
             return;
         }
-        
+        let response;
         if (this.currentEditingTask) {
-            // Update existing task
-            this.currentEditingTask.title = title;
-            this.currentEditingTask.description = description;
-            this.currentEditingTask.priority = priority;
-            this.currentEditingTask.status = status;
-        } else {
-            // Create new task
-            const newTask = {
-                id: Utils.generateId(),
-                title,
+            response = await window.pywebview.api.update_item('update_task', {
+                task_id: this.currentEditingTask.id,
+                name: title,
                 description,
+                start_date,
+                end_date,
                 priority,
-                status,
-                createdAt: new Date().toISOString()
-            };
-            
-            if (status === 'progress') {
-                newTask.progress = 0;
-            } else if (status === 'completed') {
-                newTask.completedAt = new Date().toISOString();
-                newTask.progress = 100;
+                status
+            });
+        } else {
+            response = await window.pywebview.api.add_item('create_task', {
+                name: title,
+                description,
+                start_date,
+                end_date,
+                priority,
+                status
+            });
+        }
+        if (response && response.success) {
+            await this.loadTasksFromBackend();
+            this.renderTasks();
+            // Mostrar mensaje de estado si está disponible
+            let statusMsg = '';
+            const createdStatus = response.created_status;
+            if (createdStatus === 'completed') statusMsg = 'Tarea creada como completada';
+            else if (createdStatus === 'progress') statusMsg = 'Tarea creada en En Proceso';
+            else if (createdStatus === 'new') statusMsg = 'Tarea creada como Nueva';
+            if (statusMsg) {
+                const msg = document.createElement('div');
+                msg.className = 'status-update-msg';
+                msg.textContent = statusMsg;
+                // Insertar mensaje al inicio del contenedor correspondiente
+                const container = document.getElementById(`${createdStatus}TasksContainer`);
+                if (container) {
+                    container.insertAdjacentElement('afterbegin', msg);
+                    setTimeout(() => { msg.remove(); }, 2000);
+                }
             }
-            
-            AppState.tasks.push(newTask);
         }
-        
-        this.renderTasks();
-        UserAuth.saveUserData();
         this.closeModal();
-    },
-
-    // Save event
-    saveEvent() {
-        const title = document.getElementById('eventTitle').value.trim();
-        const description = document.getElementById('eventDescription').value.trim();
-        const date = document.getElementById('eventDate').value;
-        const time = document.getElementById('eventTime').value;
-        const priority = document.getElementById('eventPriority').value;
-        
-        if (!title || !date || !time) {
-            alert('Please fill in all required fields');
-            return;
-        }
-        
-        const newEvent = {
-            id: Utils.generateId(),
-            title,
-            description,
-            date,
-            time,
-            priority
-        };
-        
-        AppState.events.push(newEvent);
-        UserAuth.saveUserData();
-        this.closeEventModal();
-        
-        // Refresh calendar if on calendar page
-        if (AppState.currentPage === 'calendar') {
-            CalendarManager.render();
-        }
-        
-        alert('Event added successfully!');
     },
 
     // Update task counts
     updateTaskCounts() {
         const stats = this.getTaskStats();
-        
         const newCount = document.getElementById('newTasksCount');
         const progressCount = document.getElementById('progressTasksCount');
         const completedCount = document.getElementById('completedTasksCount');
-        
         if (newCount) newCount.textContent = stats.new;
         if (progressCount) progressCount.textContent = stats.inProgress;
         if (completedCount) completedCount.textContent = stats.completed;
+    },
+
+    renderRecentTasks() {
+        const container = document.getElementById('recentTasksGrid');
+        if (!container) return;
+        // Ordenar por fecha de creación o completado (la más reciente primero)
+        const tasksSorted = [...AppState.tasks].sort((a, b) => {
+            const dateA = a.completedAt || a.createdAt;
+            const dateB = b.completedAt || b.createdAt;
+            return new Date(dateB) - new Date(dateA);
+        });
+        // Tomar las 3 más recientes
+        const recentTasks = tasksSorted.slice(0, 3);
+        container.innerHTML = '';
+        if (recentTasks.length === 0) {
+            container.innerHTML = '<div style="color:#64748b;">No recent tasks.</div>';
+            return;
+        }
+        recentTasks.forEach(task => {
+            const card = document.createElement('div');
+            card.className = `task-card ${task.status}`;
+            card.innerHTML = `
+                <div class="task-header">
+                    <h3 class="task-title">${task.title}</h3>
+                    ${task.status === 'completed' ? '<span class="task-status">✓</span>' : ''}
+                </div>
+                <p class="task-description">${task.description || ''}</p>
+                <div class="task-footer">
+                    <span class="task-time">${task.status === 'completed' ? 'Completed ' + Utils.formatDate(task.completedAt) : 'Created ' + Utils.formatDate(task.createdAt)}</span>
+                    <span class="task-priority ${task.priority}">${this.getPriorityLabel(task.priority)}</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
     }
 };
 
@@ -931,67 +928,22 @@ const SettingsManager = {
     loadSettings() {
         const displayName = document.getElementById('displayName');
         const userEmailSetting = document.getElementById('userEmailSetting');
-        const timezone = document.getElementById('timezone');
-        const emailNotifications = document.getElementById('emailNotifications');
-        const darkMode = document.getElementById('darkMode');
-        const autoSave = document.getElementById('autoSave');
-        
         if (AppState.currentUser) {
             if (displayName) displayName.value = AppState.settings.displayName || AppState.currentUser.name;
             if (userEmailSetting) userEmailSetting.value = AppState.currentUser.email;
-            if (timezone) timezone.value = AppState.settings.timezone || 'UTC';
-            if (emailNotifications) emailNotifications.checked = AppState.settings.emailNotifications !== false;
-            if (darkMode) darkMode.checked = AppState.settings.darkMode || false;
-            if (autoSave) autoSave.checked = AppState.settings.autoSave !== false;
         }
-        
-        // Apply current theme
-        this.applyTheme();
     },
 
     // Save user settings
     saveSettings() {
         const displayName = document.getElementById('displayName');
-        const timezone = document.getElementById('timezone');
-        const emailNotifications = document.getElementById('emailNotifications');
-        const darkMode = document.getElementById('darkMode');
-        const autoSave = document.getElementById('autoSave');
-        
-        AppState.settings = {
-            displayName: displayName ? displayName.value : AppState.currentUser.name,
-            timezone: timezone ? timezone.value : 'UTC',
-            emailNotifications: emailNotifications ? emailNotifications.checked : true,
-            darkMode: darkMode ? darkMode.checked : false,
-            autoSave: autoSave ? autoSave.checked : true
-        };
-        
-        // Save to localStorage
+        if (displayName) {
+            AppState.settings.displayName = displayName.value;
+            AppState.currentUser.name = displayName.value;
+        }
         UserAuth.saveUserData();
-        
-        // Apply theme
-        this.applyTheme();
-        
-        // Show success message
+        UserAuth.updateUserProfile();
         alert('Settings saved successfully!');
-    },
-
-    // Reset settings to default
-    resetSettings() {
-        if (confirm('Are you sure you want to reset all settings to default?')) {
-            AppState.settings = {};
-            this.loadSettings();
-            UserAuth.saveUserData();
-            alert('Settings reset to default values.');
-        }
-    },
-
-    // Apply theme based on settings
-    applyTheme() {
-        if (AppState.settings.darkMode) {
-            document.body.classList.add('dark-theme');
-        } else {
-            document.body.classList.remove('dark-theme');
-        }
     }
 };
 
@@ -1012,11 +964,9 @@ const Utils = {
         } else if (diffDays === 1) {
             return 'Yesterday';
         } else if (diffDays < 7) {
-            return `${diffDays} days ago`;
-        } else if (diffDays < 30) {
             const weeks = Math.floor(diffDays / 7);
             return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-        } else if (diffDays < 365) {
+        } else if (diffDays < 30) {
             const months = Math.floor(diffDays / 30);
             return `${months} month${months > 1 ? 's' : ''} ago`;
         } else {

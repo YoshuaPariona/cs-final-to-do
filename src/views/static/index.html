@@ -140,10 +140,6 @@
                         <div class="nav-icon">📋</div>
                         <span>Tasks</span>
                     </a>
-                    <a href="#" class="nav-item" data-page="calendar">
-                        <div class="nav-icon">📅</div>
-                        <span>Calendar</span>
-                    </a>
                 </div>
                 
                 <div class="nav-section">
@@ -181,42 +177,7 @@
                 <div class="section">
                     <h2 class="section-title">Recent Tasks</h2>
                     <div class="cards-grid" id="recentTasksGrid">
-                        <!-- Example Task Cards -->
-                        <div class="task-card completed">
-                            <div class="task-header">
-                                <h3 class="task-title">Website Redesign</h3>
-                                <span class="task-status">✓</span>
-                            </div>
-                            <p class="task-description">Complete the new landing page design and implement responsive layout for mobile devices.</p>
-                            <div class="task-footer">
-                                <span class="task-time">Completed 2 months ago</span>
-                                <span class="task-priority high">High Priority</span>
-                            </div>
-                        </div>
-                        
-                        <div class="task-card completed">
-                            <div class="task-header">
-                                <h3 class="task-title">Database Migration</h3>
-                                <span class="task-status">✓</span>
-                            </div>
-                            <p class="task-description">Migrate user data from old database system to new PostgreSQL setup with improved performance.</p>
-                            <div class="task-footer">
-                                <span class="task-time">Completed 3 days ago</span>
-                                <span class="task-priority normal">Normal Priority</span>
-                            </div>
-                        </div>
-                        
-                        <div class="task-card completed">
-                            <div class="task-header">
-                                <h3 class="task-title">Code Review</h3>
-                                <span class="task-status">✓</span>
-                            </div>
-                            <p class="task-description">Review pull requests for the authentication module and provide feedback to team members.</p>
-                            <div class="task-footer">
-                                <span class="task-time">Completed 2 hours ago</span>
-                                <span class="task-priority postponable">Postponable</span>
-                            </div>
-                        </div>
+                        <!-- Las tareas recientes reales se renderizarán aquí por JS -->
                     </div>
                 </div>
                 
@@ -251,10 +212,6 @@
                             <span class="btn-icon">+</span>
                             Add New Task
                         </button>
-                        <button class="btn-secondary" onclick="TaskManager.showAddEventModal()">
-                            <span class="btn-icon">📅</span>
-                            Add Calendar Event
-                        </button>
                     </div>
                 </div>
                 
@@ -268,62 +225,6 @@
                         </div>
                         <div class="task-cards-container" id="newTasksContainer">
                             <!-- New task cards will be rendered here -->
-                            <div class="task-card new" data-task-id="1">
-                                <div class="task-header">
-                                    <h3 class="task-title">Fix Critical Bug in Payment System</h3>
-                                    <div class="task-actions-menu">
-                                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                                        <div class="task-menu">
-                                            <button onclick="TaskManager.moveTask(1, 'progress')">Move to Progress</button>
-                                            <button onclick="TaskManager.editTask(1)">Edit</button>
-                                            <button onclick="TaskManager.deleteTask(1)">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="task-description">Resolve the payment processing error that's affecting customer transactions.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Created 2 hours ago</span>
-                                    <span class="task-priority high">High Priority</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card new" data-task-id="2">
-                                <div class="task-header">
-                                    <h3 class="task-title">Update API Documentation</h3>
-                                    <div class="task-actions-menu">
-                                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                                        <div class="task-menu">
-                                            <button onclick="TaskManager.moveTask(2, 'progress')">Move to Progress</button>
-                                            <button onclick="TaskManager.editTask(2)">Edit</button>
-                                            <button onclick="TaskManager.deleteTask(2)">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="task-description">Update API documentation with new endpoints and examples for the latest version.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Created 1 day ago</span>
-                                    <span class="task-priority normal">Normal Priority</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card new" data-task-id="3">
-                                <div class="task-header">
-                                    <h3 class="task-title">Organize Team Building Event</h3>
-                                    <div class="task-actions-menu">
-                                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                                        <div class="task-menu">
-                                            <button onclick="TaskManager.moveTask(3, 'progress')">Move to Progress</button>
-                                            <button onclick="TaskManager.editTask(3)">Edit</button>
-                                            <button onclick="TaskManager.deleteTask(3)">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="task-description">Plan and organize the quarterly team building event for all departments.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Created 3 days ago</span>
-                                    <span class="task-priority postponable">Low Priority</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -335,57 +236,6 @@
                         </div>
                         <div class="task-cards-container" id="progressTasksContainer">
                             <!-- In progress task cards will be rendered here -->
-                            <div class="task-card progress" data-task-id="4">
-                                <div class="task-header">
-                                    <h3 class="task-title">Security Audit Report</h3>
-                                    <div class="task-actions-menu">
-                                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                                        <div class="task-menu">
-                                            <button onclick="TaskManager.moveTask(4, 'completed')">Mark Complete</button>
-                                            <button onclick="TaskManager.moveTask(4, 'new')">Move to New</button>
-                                            <button onclick="TaskManager.editTask(4)">Edit</button>
-                                            <button onclick="TaskManager.deleteTask(4)">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="task-description">Complete the quarterly security audit and submit findings to management.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Started 2 days ago</span>
-                                    <span class="task-priority high">High Priority</span>
-                                </div>
-                                <div class="task-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 65%"></div>
-                                    </div>
-                                    <span class="progress-text">65% Complete</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card progress" data-task-id="5">
-                                <div class="task-header">
-                                    <h3 class="task-title">Mobile App Testing</h3>
-                                    <div class="task-actions-menu">
-                                        <button class="btn-menu" onclick="TaskManager.toggleTaskMenu(this)">⋮</button>
-                                        <div class="task-menu">
-                                            <button onclick="TaskManager.moveTask(5, 'completed')">Mark Complete</button>
-                                            <button onclick="TaskManager.moveTask(5, 'new')">Move to New</button>
-                                            <button onclick="TaskManager.editTask(5)">Edit</button>
-                                            <button onclick="TaskManager.deleteTask(5)">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="task-description">Conduct comprehensive testing of the new mobile application features.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Started 1 week ago</span>
-                                    <span class="task-priority normal">Normal Priority</span>
-                                </div>
-                                <div class="task-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 40%"></div>
-                                    </div>
-                                    <span class="progress-text">40% Complete</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -397,159 +247,6 @@
                         </div>
                         <div class="task-cards-container" id="completedTasksContainer">
                             <!-- Completed task cards will be rendered here -->
-                            <div class="task-card completed" data-task-id="6">
-                                <div class="task-header">
-                                    <h3 class="task-title">Website Redesign</h3>
-                                    <span class="task-status">✓</span>
-                                </div>
-                                <p class="task-description">Complete the new landing page design and implement responsive layout for mobile devices.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Completed 2 months ago</span>
-                                    <span class="task-priority high">High Priority</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card completed" data-task-id="7">
-                                <div class="task-header">
-                                    <h3 class="task-title">Database Migration</h3>
-                                    <span class="task-status">✓</span>
-                                </div>
-                                <p class="task-description">Migrate user data from old database system to new PostgreSQL setup with improved performance.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Completed 3 days ago</span>
-                                    <span class="task-priority normal">Normal Priority</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card completed" data-task-id="8">
-                                <div class="task-header">
-                                    <h3 class="task-title">Code Review</h3>
-                                    <span class="task-status">✓</span>
-                                </div>
-                                <p class="task-description">Review pull requests for the authentication module and provide feedback to team members.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Completed 2 hours ago</span>
-                                    <span class="task-priority postponable">Low Priority</span>
-                                </div>
-                            </div>
-                            
-                            <div class="task-card completed" data-task-id="9">
-                                <div class="task-header">
-                                    <h3 class="task-title">Client Presentation</h3>
-                                    <span class="task-status">✓</span>
-                                </div>
-                                <p class="task-description">Prepare and deliver project presentation to client stakeholders.</p>
-                                <div class="task-footer">
-                                    <span class="task-time">Completed 1 week ago</span>
-                                    <span class="task-priority high">High Priority</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Calendar Page Module -->
-            <div id="calendarPage" class="page-content">
-                <div class="content-header">
-                    <h1 class="content-title">Calendar</h1>
-                    <p class="content-subtitle">View deadlines and schedule your tasks</p>
-                </div>
-                
-                <div class="calendar-layout">
-                    <!-- Calendar Main Section -->
-                    <div class="calendar-main">
-                        <div class="calendar-header">
-                            <div class="calendar-nav">
-                                <button class="btn-nav" onclick="CalendarManager.previousMonth()">‹</button>
-                                <h2 id="currentMonth">December 2024</h2>
-                                <button class="btn-nav" onclick="CalendarManager.nextMonth()">›</button>
-                            </div>
-                            <div class="calendar-actions">
-                                <button class="btn-today" onclick="CalendarManager.goToToday()">Today</button>
-                                <button class="btn-view active" data-view="month">Month</button>
-                                <button class="btn-view" data-view="week">Week</button>
-                            </div>
-                        </div>
-                        
-                        <div class="calendar-container">
-                            <div class="calendar-grid">
-                                <div class="calendar-weekdays">
-                                    <div class="weekday">Sun</div>
-                                    <div class="weekday">Mon</div>
-                                    <div class="weekday">Tue</div>
-                                    <div class="weekday">Wed</div>
-                                    <div class="weekday">Thu</div>
-                                    <div class="weekday">Fri</div>
-                                    <div class="weekday">Sat</div>
-                                </div>
-                                
-                                <div class="calendar-days" id="calendarDays">
-                                    <!-- Calendar days will be generated by JavaScript -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Calendar Sidebar -->
-                    <div class="calendar-sidebar">
-                        <div class="mini-calendar">
-                            <div class="mini-calendar-header">
-                                <button class="btn-mini-nav" onclick="CalendarManager.previousMiniMonth()">‹</button>
-                                <h3 id="miniCurrentMonth">Dec 2024</h3>
-                                <button class="btn-mini-nav" onclick="CalendarManager.nextMiniMonth()">›</button>
-                            </div>
-                            <div class="mini-calendar-grid" id="miniCalendarDays">
-                                <!-- Mini calendar days -->
-                            </div>
-                        </div>
-                        
-                        <div class="upcoming-events">
-                            <h3>Upcoming Events</h3>
-                            <div class="events-list">
-                                <div class="event-item high-priority">
-                                    <div class="event-indicator"></div>
-                                    <div class="event-content">
-                                        <div class="event-title">Project Deadline</div>
-                                        <div class="event-date">Dec 15, 2024</div>
-                                        <div class="event-time">11:59 PM</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="event-item normal-priority">
-                                    <div class="event-indicator"></div>
-                                    <div class="event-content">
-                                        <div class="event-title">Team Meeting</div>
-                                        <div class="event-date">Dec 20, 2024</div>
-                                        <div class="event-time">2:00 PM</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="event-item low-priority">
-                                    <div class="event-indicator"></div>
-                                    <div class="event-content">
-                                        <div class="event-title">Code Review Session</div>
-                                        <div class="event-date">Dec 22, 2024</div>
-                                        <div class="event-time">10:00 AM</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="calendar-legend">
-                            <h4>Event Types</h4>
-                            <div class="legend-item">
-                                <div class="legend-color high-priority"></div>
-                                <span>High Priority</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color normal-priority"></div>
-                                <span>Normal Priority</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color low-priority"></div>
-                                <span>Low Priority</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -559,9 +256,8 @@
             <div id="settingsPage" class="page-content">
                 <div class="content-header">
                     <h1 class="content-title">User Settings</h1>
-                    <p class="content-subtitle">Configure your account and preferences</p>
+                    <p class="content-subtitle">Edit your profile information</p>
                 </div>
-                
                 <div class="settings-container">
                     <div class="settings-section">
                         <h3>Profile Information</h3>
@@ -574,54 +270,10 @@
                                 <label>Email</label>
                                 <input type="email" id="userEmailSetting" class="form-input" readonly>
                             </div>
-                            <div class="form-group">
-                                <label>Timezone</label>
-                                <select id="timezone" class="form-input">
-                                    <option value="UTC">UTC</option>
-                                    <option value="EST">Eastern Time</option>
-                                    <option value="PST">Pacific Time</option>
-                                    <option value="CET">Central European Time</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
-                    
-                    <div class="settings-section">
-                        <h3>Preferences</h3>
-                        <div class="settings-form">
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="emailNotifications">
-                                    <span>Email notifications</span>
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="darkMode">
-                                    <span>Dark mode</span>
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="autoSave">
-                                    <span>Auto-save changes</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3>Security</h3>
-                        <div class="settings-form">
-                            <button class="btn-secondary">Change Password</button>
-                            <button class="btn-secondary">Two-Factor Authentication</button>
-                            <button class="btn-danger">Delete Account</button>
-                        </div>
-                    </div>
-                    
                     <div class="settings-actions">
                         <button class="btn-primary" onclick="SettingsManager.saveSettings()">Save Changes</button>
-                        <button class="btn-secondary" onclick="SettingsManager.resetSettings()">Reset to Default</button>
                     </div>
                 </div>
             </div>
