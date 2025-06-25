@@ -49,6 +49,7 @@ class Api:
             name = data.get('name')
             email = data.get('email')
             password = data.get('password')
+            print(data)
             success, message = self.controller.register_user(name, email, password)
             return {"success": success, "message": message}
         elif action == 'create_task':

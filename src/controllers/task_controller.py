@@ -37,7 +37,7 @@ class TaskController:
             return False, "El correo ya está en uso"
         db_user = Usuario(nombre=username, email=email, contraseña=password, modoOscuro=False) # Modelo alchemy
 
-        if self.repository.save_user(db_user):
+        if self.repository.create_user(username, email, password):
             return True, "Usuario registrado exitosamente"
         return False, "Error al registrar usuario"
 
