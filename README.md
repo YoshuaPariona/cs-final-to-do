@@ -5,27 +5,26 @@ Una aplicación de gestión de tareas desarrollada con Python y SQLAlchemy. Perm
 ## Características
 
 - Sistema de usuarios
-  - Registro de usuarios
-  - Inicio y cierre de sesión
-  - Modo oscuro personalizable
+   - Registro de usuarios
+   - Inicio y cierre de sesión
 
 - Gestión de tareas
-  - Crear tareas con diferentes prioridades
-  - Marcar tareas como completadas
-  - Actualizar detalles de tareas
-  - Eliminar tareas
-  - Limpieza automática de tareas antiguas
+   - Crear tareas con diferentes prioridades
+   - Marcar tareas como completadas
+   - Actualizar detalles de tareas
+   - Eliminar tareas
 
-- Prioridades de tareas
-  - Importantes
-  - Normales
-  - Postergables
+-  Estados de tareas
+   - New
+   - En prograso
+   - Completado
 
 ## Requisitos
 
 - Python 3.8+
 - SQLAlchemy
 - SQLite3
+- Pywebview
 
 ## Instalación
 
@@ -48,7 +47,7 @@ Una aplicación de gestión de tareas desarrollada con Python y SQLAlchemy. Perm
 
 4. Ejecuta las pruebas:
    ```bash
-   python -m pytest tests/
+   python -m pytest tests/run_all_tests
    ```
 
 ## Estructura del Proyecto
@@ -56,12 +55,13 @@ Una aplicación de gestión de tareas desarrollada con Python y SQLAlchemy. Perm
 ```
 cs-final-to-do/
 ├── src/
-│   ├── controlador/     # Controladores y lógica de negocio
-│   │   ├── database/    # Capa de acceso a datos
-│   │   └── logica/      # Modelos de base de datos
-│   ├── modelo/          # Modelos de dominio
+│   ├── controlador/    # Controladores y lógica de negocio
+│   ├── database/       # Capa de acceso a datos
+│   ├── modelo/         # Modelos de dominio
 │   └── vista/          # Interfaces de usuario
+│      └── static/     # Diseño de interfaz en js
 ├── tests/              # Pruebas unitarias
+├── main.py
 ├── README.md
 └── requirements.txt
 ```
