@@ -601,8 +601,8 @@ const TaskManager = {
             }
             card.innerHTML += `
                 <div class="task-quick-actions">
-                    <button class="task-delete-btn" title="eliminar tarea" onclick="TaskManager.deleteTask(${task.id})"><span class="delete-x">&times;</span></button>
                     <button class="task-edit-btn" title="editar tarea" onclick="TaskManager.editTask(${task.id})"><span class="edit-pencil">✏️</span></button>
+                    <button class="task-delete-btn" title="eliminar tarea" onclick="TaskManager.deleteTask(${task.id})"><span class="delete-x">&times;</span></button>
                 </div>
                 <div class="task-header">
                     <h3 class="task-title">${task.title}</h3>
@@ -933,23 +933,159 @@ const SettingsManager = {
     loadSettings() {
         const displayName = document.getElementById('displayName');
         const userEmailSetting = document.getElementById('userEmailSetting');
+        const emailErrorElem = document.getElementById('userEmailSettingError');
         if (AppState.currentUser) {
             if (displayName) displayName.value = AppState.settings.displayName || AppState.currentUser.name;
             if (userEmailSetting) userEmailSetting.value = AppState.currentUser.email;
         }
+        if (userEmailSetting && emailErrorElem) {
+            userEmailSetting.addEventListener('input', () => {
+                emailErrorElem.textContent = '';
+            });
+        }
+    },
+
+    // Mostrar modal de contraseña para autorizar cambios
+    showPasswordModal(onConfirm) {
+        let modal = document.getElementById('passwordAuthModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'passwordAuthModal';
+            modal.className = 'modal password-auth-modal';
+            modal.innerHTML = `
+                <div class="modal-content small-modal">
+                    <h3>Confirmar contraseña</h3>
+                    <input id="passwordAuthInput" type="password" placeholder="Contraseña actual" autocomplete="current-password" style="width:100%;margin-bottom:10px;" />
+                    <div id="passwordAuthError" style="color:#e74c3c;font-size:13px;height:18px;"></div>
+                    <div style="display:flex;justify-content:flex-end;gap:10px;">
+                        <button id="passwordAuthCancelBtn" class="btn-cancel">Cancelar</button>
+                        <button id="passwordAuthConfirmBtn" class="btn-primary">Confirmar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        modal.style.display = 'flex';
+        const input = document.getElementById('passwordAuthInput');
+        const errorElem = document.getElementById('passwordAuthError');
+        input.value = '';
+        errorElem.textContent = '';
+        input.focus();
+        // Confirmar
+        document.getElementById('passwordAuthConfirmBtn').onclick = () => {
+            const pwd = input.value;
+            if (!pwd) {
+                errorElem.textContent = 'Debes ingresar tu contraseña.';
+                input.focus();
+                return;
+            }
+            modal.style.display = 'none';
+            onConfirm(pwd);
+        };
+        // Cancelar
+        document.getElementById('passwordAuthCancelBtn').onclick = () => {
+            modal.style.display = 'none';
+        };
+        // Enter para confirmar
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') document.getElementById('passwordAuthConfirmBtn').click();
+        };
     },
 
     // Save user settings
-    saveSettings() {
+    async saveSettings() {
         const displayName = document.getElementById('displayName');
-        if (displayName) {
-            AppState.settings.displayName = displayName.value;
-            AppState.currentUser.name = displayName.value;
+        const userEmailSetting = document.getElementById('userEmailSetting');
+        const newPassword = document.getElementById('newPassword');
+        const emailErrorElem = document.getElementById('userEmailSettingError');
+        // Validaciones
+        const name = displayName ? displayName.value.trim() : '';
+        const email = userEmailSetting ? userEmailSetting.value.trim() : '';
+        const prevEmail = AppState.currentUser ? AppState.currentUser.email : '';
+        if (emailErrorElem) emailErrorElem.textContent = '';
+        if (!name) {
+            alert('El nombre no puede estar vacío.');
+            return;
         }
-        UserAuth.saveUserData();
-        UserAuth.updateUserProfile();
-        alert('Settings saved successfully!');
-    }
+        if (!email) {
+            if (emailErrorElem) emailErrorElem.textContent = 'El email no puede estar vacío.';
+            else alert('El email no puede estar vacío.');
+            return;
+        }
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            if (emailErrorElem) emailErrorElem.textContent = 'El email no tiene un formato válido.';
+            else alert('El email no tiene un formato válido.');
+            return;
+        }
+        // Si el email cambió, verificar que no esté en uso
+        if (email !== prevEmail) {
+            try {
+                const resp = await window.pywebview.api.get_item('get_user', { email });
+                if (resp && resp.success && resp.user) {
+                    if (emailErrorElem) emailErrorElem.textContent = 'Este email ya está en uso.';
+                    else alert('Este email ya está en uso.');
+                    return;
+                }
+            } catch (e) {
+                // Si hay error, continuar (no bloquear por error de red)
+            }
+        }
+        // Mostrar modal de contraseña y continuar si es válida
+        this.showPasswordModal(async (password) => {
+            // Llamada real al backend para actualizar usuario
+            try {
+                const payload = {
+                    id: AppState.currentUser.id,
+                    name: name,
+                    email: email,
+                    current_password: password,
+                };
+                if (newPassword && newPassword.value) {
+                    payload.new_password = newPassword.value;
+                }
+                const resp = await window.pywebview.api.update_item('update_user', payload);
+                if (!resp.success) {
+                    alert(resp.message || 'No se pudo actualizar el usuario.');
+                    return;
+                }
+                // Actualizar datos locales
+                AppState.settings.displayName = name;
+                AppState.currentUser.name = name;
+                AppState.currentUser.email = email;
+                if (newPassword) newPassword.value = '';
+                UserAuth.saveUserData();
+                UserAuth.updateUserProfile();
+                alert('¡Datos de usuario actualizados correctamente!');
+            } catch (e) {
+                alert('Error al actualizar usuario.');
+            }
+        });
+    },
+
+    // Eliminar usuario
+    async deleteUser() {
+        if (!confirm('¿Estás seguro de que deseas eliminar tu usuario? Esta acción no se puede deshacer.')) {
+            return;
+        }
+        this.showPasswordModal(async (password) => {
+            try {
+                const resp = await window.pywebview.api.remove_item('delete_user', {
+                    id: AppState.currentUser.id,
+                    current_password: password
+                });
+                if (!resp.success) {
+                    alert(resp.message || 'No se pudo eliminar el usuario.');
+                    return;
+                }
+                alert('Usuario eliminado correctamente.');
+                UserAuth.logout();
+            } catch (e) {
+                alert('Error al eliminar usuario.');
+            }
+        });
+    },
 };
 
 // ===== UTILITY FUNCTIONS =====

@@ -49,7 +49,6 @@ class Api:
             name = data.get('name')
             email = data.get('email')
             password = data.get('password')
-            print(data)
             success, message = self.controller.register_user(name, email, password)
             return {"success": success, "message": message}
         elif action == 'create_task':
@@ -110,6 +109,43 @@ class Api:
                 return {"success": success, "message": message, "tasks": [self._task_to_dict(t) for t in tasks], "updated_status": updated_status}
             except Exception as e:
                 return {"success": False, "message": str(e)}
+        elif action == 'update_user':
+            # Actualizar usuario (nombre, email, password)
+            name = data.get('name')
+            email = data.get('email')
+            new_password = data.get('new_password')
+            current_password = data.get('current_password')
+            # Validar usuario autenticado
+            user = self.controller.repository.get_user_by_email(self.controller.current_user)
+            if not user:
+                return {"success": False, "message": "Usuario no autenticado"}
+            # Validar contraseña actual
+            if not current_password or user.contraseña != current_password:
+                return {"success": False, "message": "Contraseña actual incorrecta"}
+            # Validar nombre y email no vacíos
+            if not name or not email:
+                return {"success": False, "message": "Nombre y email no pueden estar vacíos"}
+            # Validar formato de email
+            import re
+            email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+            if not re.match(email_regex, email):
+                return {"success": False, "message": "El email no tiene un formato válido"}
+            # Validar email único si cambia
+            if email != user.email:
+                if self.controller.repository.get_user_by_email(email):
+                    return {"success": False, "message": "El email ya está en uso!"}
+            # Actualizar campos
+            update_kwargs = {}
+            if name: update_kwargs['nombre'] = name
+            if email: update_kwargs['email'] = email
+            if new_password: update_kwargs['contraseña'] = new_password
+            ok = self.controller.repository.update_user(user.idUsuario, **update_kwargs)
+            if ok:
+                # Si el email cambió, actualizar current_user
+                if email:
+                    self.controller.current_user = email
+                return {"success": True, "message": "Usuario actualizado"}
+            return {"success": False, "message": "No se pudo actualizar el usuario"}
         return {"success": False, "message": "Acción desconocida"}
 
     def remove_item(self, action: str, data: dict) -> dict:
@@ -126,6 +162,18 @@ class Api:
             success, message = self.controller.delete_event(event_id)
             events = self.controller.get_user_events()
             return {"success": success, "message": message, "events": [self._event_to_dict(e) for e in events]}
+        elif action == 'delete_user':
+            # Eliminar usuario autenticado
+            current_password = data.get('current_password')
+            # Buscar usuario actual
+            user = self.controller.repository.get_user_by_email(self.controller.current_user)
+            if not current_password or user.contraseña != current_password:
+                return {"success": False, "message": "Contraseña incorrecta"}
+            ok = self.controller.repository.delete_user(user.idUsuario)
+            if ok:
+                self.controller.current_user = None
+                return {"success": True, "message": "Usuario eliminado"}
+            return {"success": False, "message": "No se pudo eliminar el usuario"}
         return {"success": False, "message": "Acción desconocida"}
 
     def toggle_item(self, action: str, data: dict) -> dict:

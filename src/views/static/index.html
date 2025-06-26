@@ -263,17 +263,22 @@
                         <h3>Profile Information</h3>
                         <div class="settings-form">
                             <div class="form-group">
-                                <label>Display Name</label>
+                                <label>Nombre</label>
                                 <input type="text" id="displayName" class="form-input" placeholder="Your display name">
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" id="userEmailSetting" class="form-input" readonly>
+                                <input type="email" id="userEmailSetting" class="form-input" placeholder="Your email address">
+                            </div>
+                            <div class="form-group">
+                                <label>Nueva contraseña</label>
+                                <input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
                             </div>
                         </div>
                     </div>
                     <div class="settings-actions">
                         <button class="btn-primary" onclick="SettingsManager.saveSettings()">Save Changes</button>
+                        <button class="btn-danger" onclick="SettingsManager.deleteUser()">Delete User</button>
                     </div>
                 </div>
             </div>
