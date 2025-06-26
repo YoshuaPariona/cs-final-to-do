@@ -599,7 +599,11 @@ const TaskManager = {
                     <button class="btn-move-progress" onclick="TaskManager.moveTask(${task.id}, 'progress')">Mover a En Proceso</button>
                 `;
             }
-            card.innerHTML = `
+            card.innerHTML += `
+                <div class="task-quick-actions">
+                    <button class="task-delete-btn" title="eliminar tarea" onclick="TaskManager.deleteTask(${task.id})"><span class="delete-x">&times;</span></button>
+                    <button class="task-edit-btn" title="editar tarea" onclick="TaskManager.editTask(${task.id})"><span class="edit-pencil">✏️</span></button>
+                </div>
                 <div class="task-header">
                     <h3 class="task-title">${task.title}</h3>
                     ${task.status === 'completed' ? '<span class="task-status">✓</span>' : ''}
@@ -692,7 +696,7 @@ const TaskManager = {
 
     // Delete task
     async deleteTask(taskId) {
-        if (confirm('Are you sure you want to delete this task?')) {
+        if (confirm('¿Seguro que deseas eliminar esta tarea?')) {
             const response = await window.pywebview.api.remove_item('delete_task', { task_id: taskId });
             if (response.success) {
                 await this.loadTasksFromBackend();
