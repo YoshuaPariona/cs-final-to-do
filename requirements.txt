@@ -1,13 +1,10 @@
 # Interfaz gráfica y web
 pywebview
-fastapi
-uvicorn
 qtpy
 pyqt5
 
 # Base de datos y ORM
 sqlalchemy
-alembic
 
 # Testing y calidad de código
 pytest
