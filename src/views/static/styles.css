@@ -1203,6 +1203,94 @@ button.btn-link:focus {
     border-top: 1px solid #e2e8f0;
 }
 
+/* ===== PASSWORD AUTH MODAL ===== */
+.password-auth-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s;
+}
+.password-auth-modal .modal-content.small-modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(30,41,59,0.18);
+    padding: 32px 28px 24px 28px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: slideIn 0.2s;
+}
+.password-auth-modal h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+#passwordAuthInput {
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 100%;
+    margin-bottom: 0;
+    background: #f8fafc;
+    transition: border 0.2s;
+}
+#passwordAuthInput:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+#passwordAuthError {
+    color: #ef4444;
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 4px;
+    text-align: left;
+}
+.password-auth-modal .btn-primary {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.password-auth-modal .btn-primary:hover {
+    background: #2563eb;
+}
+.password-auth-modal .btn-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.password-auth-modal .btn-cancel:hover {
+    background: #e2e8f0;
+    color: #374151;
+}
+@media (max-width: 480px) {
+    .password-auth-modal .modal-content.small-modal {
+        padding: 18px 8px 14px 8px;
+        max-width: 95vw;
+    }
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1200px) {
     .task-sections {
@@ -1515,4 +1603,61 @@ button.btn-link:focus {
     z-index: 10;
     position: relative;
     text-align: center;
+}
+
+.task-quick-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+}
+.task-delete-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f87171;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px 0 rgba(248, 113, 113, 0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.task-delete-btn:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 16px 0 rgba(220, 38, 38, 0.15);
+}
+.delete-x {
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+    pointer-events: none;
+}
+.task-edit-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #fbbf24;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px 0 rgba(251, 191, 36, 0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.task-edit-btn:hover {
+    background: #d97706;
+    box-shadow: 0 4px 16px 0 rgba(217, 119, 6, 0.15);
+}
+.edit-pencil {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    pointer-events: none;
 }
