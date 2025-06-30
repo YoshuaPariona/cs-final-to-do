@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agregar el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -20,7 +19,7 @@ from src.models.models import Base
 class TestRegisterUserSuccess(unittest.TestCase):
     """
     Prueba que simula un intento de registro de usuario,
-    verificando que el sistema maneje correctamente una falla de mapeo.
+    verificando que el sistema maneje correctamente el registro exitoso.
     """
 
     def setUp(self):
@@ -37,16 +36,15 @@ class TestRegisterUserSuccess(unittest.TestCase):
 
     def test_register_user_success(self):
         """
-        Verifica que el método register_user no lanza excepciones,
-        aunque falle por mapeo incorrecto de modelo.
+        Verifica que el método register_user registre correctamente un usuario nuevo.
         """
         success, message = self.controller.register_user(
             username="newuser",
             email="newuser2@example.com",
             password="password123"
         )
-        self.assertFalse(success)
-        self.assertEqual(message, "Error al registrar usuario")
+        self.assertTrue(success)
+        self.assertEqual(message, "Usuario registrado exitosamente")
 
 
 if __name__ == "__main__":

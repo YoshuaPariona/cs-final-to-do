@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -39,10 +38,10 @@ class TestRegisterUserDuplicate(unittest.TestCase):
         Intenta registrar dos usuarios con el mismo correo.
         Verifica que el segundo intento falle por duplicidad.
         """
-        # Primer registro (actualmente falla por modelo incompleto)
+        # Primer registro
         self.controller.register_user("testuser", "test@example.com", "password123")
 
-        # Segundo registro con el mismo correo (también falla)
+        # Segundo registro con el mismo correo
         success, message = self.controller.register_user(
             username="testuser2",
             email="test@example.com",  # Email duplicado
@@ -50,7 +49,7 @@ class TestRegisterUserDuplicate(unittest.TestCase):
         )
 
         self.assertFalse(success)
-        self.assertEqual(message, "Error al registrar usuario")
+        self.assertEqual(message, "El correo ya está en uso")
 
 
 if __name__ == "__main__":

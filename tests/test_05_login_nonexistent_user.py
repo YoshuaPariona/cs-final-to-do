@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -39,7 +38,7 @@ class TestLoginNonexistentUser(unittest.TestCase):
         Intenta iniciar sesión con un correo que no existe.
         Verifica que el sistema indique que el usuario no fue encontrado.
         """
-        success, message = self.controller.login("login123@example.com", "password123")
+        success, message, _ = self.controller.login("login123@example.com", "password123")
 
         self.assertFalse(success)
         self.assertIn("no encontrado", message.lower())

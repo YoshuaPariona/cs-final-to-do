@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -37,16 +36,14 @@ class TestLogout(unittest.TestCase):
     def test_logout(self):
         """
         Simula un intento de login y luego ejecuta logout.
-        Dado que el login no funcionó, se espera que `current_user` siga en None.
         """
-        # Registro y login fallan (modelo aún no funcional)
         self.controller.register_user("testuser", "test@example.com", "password123")
         self.controller.login("test@example.com", "password123")
 
-        # Aún no hay usuario logueado
-        self.assertIsNone(self.controller.current_user)
+        # current_user debe ser el email tras login
+        self.assertEqual(self.controller.current_user, "test@example.com")
 
-        # Ejecutar logout no debe causar errores ni cambiar el estado
+        # Ejecutar logout debe dejar current_user en None
         self.controller.logout()
         self.assertIsNone(self.controller.current_user)
 

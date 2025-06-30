@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 

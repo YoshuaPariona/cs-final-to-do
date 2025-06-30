@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -37,17 +36,14 @@ class TestLoginSuccess(unittest.TestCase):
     def test_login_success(self):
         """
         Registra un usuario y luego intenta iniciar sesión.
-        El login falla porque el modelo aún no se guarda correctamente.
         """
-        # Registro simulado (actualmente no persiste)
         self.controller.register_user("loginuser", "login@example.com", "password123")
 
         # Intentar login con el mismo correo y contraseña
-        success, message = self.controller.login("login@example.com", "password123")
+        success, message, _ = self.controller.login("login@example.com", "password123")
 
-        # Se espera fallo, ya que no se guardó realmente en la base
-        self.assertFalse(success)
-        self.assertEqual(message, "Usuario no encontrado")
+        self.assertTrue(success)
+        self.assertEqual(message, "Inicio de sesión exitoso")
 
 
 if __name__ == "__main__":

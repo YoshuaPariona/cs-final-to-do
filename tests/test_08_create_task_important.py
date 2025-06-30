@@ -13,7 +13,6 @@ from datetime import datetime
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -45,7 +44,7 @@ class TestCreateTaskImportant(unittest.TestCase):
             description="Tarea con prioridad importante",
             start_date=datetime(2026, 12, 29),
             end_date=datetime(2026, 12, 30),
-            priority=TaskPriority.IMPORTANT.value
+            priority="Importante"
         )
 
         # Se espera fallo porque no hay usuario autenticado

@@ -12,7 +12,6 @@ from sqlalchemy.orm import sessionmaker
 # Agrega el directorio raíz del proyecto al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.models.task import TaskPriority, TaskStatus, Task
 from src.controllers.task_controller import TaskController
 from src.models.models import Base
 
@@ -37,17 +36,14 @@ class TestLoginWrongPassword(unittest.TestCase):
     def test_login_wrong_password(self):
         """
         Registra un usuario y luego intenta iniciar sesión con una contraseña incorrecta.
-        Se espera un fallo, ya que el usuario no se guardó efectivamente.
         """
-        # Registro inicial simulado
         self.controller.register_user("testuser", "login@example.com", "password123")
 
         # Intento de login con contraseña equivocada
-        success, message = self.controller.login("login@example.com", "wrongpassword")
+        success, message, _ = self.controller.login("login@example.com", "wrongpassword")
 
-        # Aún falla porque el usuario no existe realmente
         self.assertFalse(success)
-        self.assertEqual(message, "Usuario no encontrado")
+        self.assertEqual(message, "Contraseña incorrecta")
 
 
 if __name__ == "__main__":
