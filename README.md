@@ -64,6 +64,7 @@ cs-final-to-do/
 ├── main.py
 ├── README.md
 └── requirements.txt
+└── run_tests_with_coverage.bat
 ```
 
 ## Arquitectura
